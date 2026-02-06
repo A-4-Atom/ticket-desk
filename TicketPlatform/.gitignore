@@ -1,0 +1,22 @@
+# Build outputs
+**/bin/
+**/obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ASP.NET / IIS Express
+.vs/
+.vscode/
+
+# NuGet (IMPORTANT)
+packages/
+
+# Logs
+*.log
+
+*.user
