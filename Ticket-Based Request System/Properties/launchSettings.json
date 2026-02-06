@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Ticket_Based_Request_System": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7255",
+      "launchBrowser": false
+    }
+  }
+}

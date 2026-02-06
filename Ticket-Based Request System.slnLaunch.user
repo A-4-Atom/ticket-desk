@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "Ticket-Based Request System\\Ticket-Based Request System.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "TicketPlatform\\TicketPlatform.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
