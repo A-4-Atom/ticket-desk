@@ -24,21 +24,23 @@
                     Enter your details to access your tickets
                 </p>
 
-                <form method="post">
+                <form id="loginForm">
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold" for="email">Email Address</label>
                         <input id="email" type="email" class="form-control form-control-lg w-100"
-                               placeholder="name@example.com" name="email" autocomplete="on" />
+                               placeholder="name@example.com" name="email" autocomplete="on" required />
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold" for="password">Password</label>
                         <input id="password" type="password" class="form-control form-control-lg"
-                               placeholder="*******" name="password" />
+                               placeholder="*******" name="password" required />
                     </div>
 
-                    <button type="submit" class="btn btn-primary btn-lg w-100 mt-2">
+                    <div id="errorMessage" class="alert alert-danger d-none" role="alert"></div>
+
+                    <button type="submit" id="loginBtn" class="btn btn-primary btn-lg w-100 mt-2">
                         Sign In
                     </button>
                 </form>
@@ -55,5 +57,57 @@
 
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
+
+    <script>
+        $(document).ready(function () {
+            $('#loginForm').on('submit', function (e) {
+                e.preventDefault();
+
+                const email = $('#email').val();
+                const password = $('#password').val();
+                const $errorMessage = $('#errorMessage');
+                const $loginBtn = $('#loginBtn');
+
+                // Clear previous errors
+                $errorMessage.addClass('d-none');
+
+                // Disable button and show loading state
+                $loginBtn.prop('disabled', true).text('Signing in...');
+
+                // Call Azure Function (adjust port if your function runs on a different port)
+                $.ajax({
+                    url: 'http://localhost:7255/api/auth/login',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        email: email,
+                        password: password
+                    }),
+                    success: function (response) {
+                        // Store user data in session storage
+                        sessionStorage.setItem('userId', response.userId);
+                        sessionStorage.setItem('employeeCode', response.employeeCode);
+                        sessionStorage.setItem('role', response.role);
+                        sessionStorage.setItem('rolePrefix', response.rolePrefix);
+                        sessionStorage.setItem('userName', response.name);
+
+                        // Redirect to home or dashboard
+                        window.location.href = '/Home/Index';
+                    },
+                    error: function (xhr) {
+                        // Re-enable button
+                        $loginBtn.prop('disabled', false).text('Sign In');
+
+                        // Show error message
+                        if (xhr.status === 401) {
+                            $errorMessage.text('Invalid email or password. Please try again.').removeClass('d-none');
+                        } else {
+                            $errorMessage.text('An error occurred. Please try again later.').removeClass('d-none');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

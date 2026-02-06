@@ -1,33 +1,89 @@
 ﻿@{
-    ViewBag.Title = "Home Page";
+    ViewBag.Title = "Dashboard";
 }
 
-<main>
-    <section class="row" aria-labelledby="aspnetTitle">
-        <h1 id="title">ASP.NET</h1>
-        <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
-        <p><a href="https://asp.net" class="btn btn-primary btn-md">Learn more &raquo;</a></p>
-    </section>
-
+<div class="container mt-5">
     <div class="row">
-        <section class="col-md-4" aria-labelledby="gettingStartedTitle">
-            <h2 id="gettingStartedTitle">Getting started</h2>
-            <p>
-                ASP.NET MVC gives you a powerful, patterns-based way to build dynamic websites that
-                enables a clean separation of concerns and gives you full control over markup
-                for enjoyable, agile development.
-            </p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301865">Learn more &raquo;</a></p>
-        </section>
-        <section class="col-md-4" aria-labelledby="librariesTitle">
-            <h2 id="librariesTitle">Get more libraries</h2>
-            <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301866">Learn more &raquo;</a></p>
-        </section>
-        <section class="col-md-4" aria-labelledby="hostingTitle">
-            <h2 id="hostingTitle">Web Hosting</h2>
-            <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-            <p><a class="btn btn-outline-dark" href="https://go.microsoft.com/fwlink/?LinkId=301867">Learn more &raquo;</a></p>
-        </section>
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h1 class="display-5 fw-bold mb-2">Welcome, <span id="userName">User</span>! 👋</h1>
+                    <p class="text-muted mb-4">Employee Code: <span id="employeeCode" class="badge bg-primary"></span></p>
+                    <p class="lead">You're successfully logged into the Ticket Platform.</p>
+                    
+                    <div class="mt-4">
+                        <button class="btn btn-danger" id="logoutBtn">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</main>
+
+    <div class="row mt-4" id="userInfo">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Your Role</h5>
+                    <p class="card-text">
+                        <span class="badge bg-success fs-6" id="userRole"></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h5 class="card-title">User ID</h5>
+                    <p class="card-text">
+                        <code id="userId" class="fs-6"></code>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Role Prefix</h5>
+                    <p class="card-text">
+                        <span class="badge bg-info fs-6" id="rolePrefix"></span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Check if user is logged in
+            const userName = sessionStorage.getItem('userName');
+            const userId = sessionStorage.getItem('userId');
+            const employeeCode = sessionStorage.getItem('employeeCode');
+            const role = sessionStorage.getItem('role');
+            const rolePrefix = sessionStorage.getItem('rolePrefix');
+
+            if (!userId) {
+                // User not logged in, redirect to login page
+                window.location.href = '/Auth/Login';
+                return;
+            }
+
+            // Display user information
+            $('#userName').text(userName || 'User');
+            $('#employeeCode').text(employeeCode || 'N/A');
+            $('#userId').text(userId);
+            $('#userRole').text(role || 'N/A');
+            $('#rolePrefix').text(rolePrefix || 'N/A');
+
+            // Logout functionality
+            $('#logoutBtn').on('click', function () {
+                // Clear session storage
+                sessionStorage.clear();
+                
+                // Redirect to login page
+                window.location.href = '/Auth/Login';
+            });
+        });
+    </script>
+}
