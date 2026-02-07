@@ -1,7 +1,137 @@
-﻿
-@{
-    ViewBag.Title = "SignUp";
+﻿@{
+    ViewBag.Title = "Signup";
+    Layout = null;
 }
 
-<h2>SignUp</h2>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign Up</title>
 
+    @Styles.Render("~/Content/css")
+</head>
+
+<body class="bg-light">
+
+    <div class="container min-vh-100 d-flex justify-content-center align-items-center">
+        <div class="card shadow-sm border-0 rounded-4 w-100" style="max-width: 600px;">
+            <div class="card-body p-4 p-md-5">
+
+                <h2 class="fw-bold text-center mb-2">Create an account</h2>
+                <p class="text-muted text-center mb-4">
+                    Get started with our support platform today
+                </p>
+
+                <form id="signupForm">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Full Name</label>
+                        <input type="text" class="form-control form-control-lg"
+                               placeholder="John Doe" name="fullName" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Email Address</label>
+                        <input type="email" class="form-control form-control-lg"
+                               placeholder="name@example.com" name="email" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Password</label>
+                        <input type="password" class="form-control form-control-lg"
+                               placeholder="*******" name="password" required />
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold d-block mb-2">I am a:</label>
+
+                        <div class="btn-group w-100" role="group">
+
+                            <input type="radio" class="btn-check" name="role"
+                                   id="roleSalesRep" value="Sales Rep" checked>
+                            <label class="btn btn-outline-primary" for="roleSalesRep">
+                                Sales Rep
+                            </label>
+
+                            <input type="radio" class="btn-check" name="role"
+                                   id="roleSVP" value="SVP">
+                            <label class="btn btn-outline-primary" for="roleSVP">
+                                SVP
+                            </label>
+
+                            <input type="radio" class="btn-check" name="role"
+                                   id="roleITManager" value="IT Manager">
+                            <label class="btn btn-outline-primary" for="roleITManager">
+                                IT Manager
+                            </label>
+
+                        </div>
+                    </div>
+
+                    <div id="errorMessage" class="alert alert-danger d-none" role="alert"></div>
+
+                    <button type="submit" id="signupBtn" class="btn btn-primary btn-lg w-100">
+                        Sign Up
+                    </button>
+                </form>
+
+                <div class="text-center mt-4">
+                    <a href="/Auth/Login" class="text-decoration-none fw-semibold">
+                        Already have an account? Sign in
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+
+    <script>
+        $(document).ready(function () {
+            $('#signupForm').on('submit', function (e) {
+                e.preventDefault();
+
+                const fullName = $('input[name="fullName"]').val();
+                const email = $('input[name="email"]').val();
+                const password = $('input[name="password"]').val();
+                const role = $('input[name="role"]:checked').val();
+                const $errorMessage = $('#errorMessage');
+                const $signupBtn = $('#signupBtn');
+
+                $errorMessage.addClass('d-none');
+
+                $signupBtn.prop('disabled', true).text('Signing up...');
+
+                $.ajax({
+                    url: 'http://localhost:7255/api/auth/signup',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        name: fullName,
+                        email: email,
+                        password: password,
+                        role: role
+                    }),
+                    success: function () {
+                        // On successful signup, redirect to login page
+                        window.location.href = '/Auth/Login';
+                    },
+                    error: function (xhr) {
+                        $signupBtn.prop('disabled', false).text('Sign Up');
+
+                        if (xhr.status === 400) {
+                            $errorMessage.text('Invalid data provided. Please check the form and try again.').removeClass('d-none');
+                        } else {
+                            $errorMessage.text('An error occurred while creating the account. Please try again later.').removeClass('d-none');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

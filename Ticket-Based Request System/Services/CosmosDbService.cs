@@ -1,6 +1,5 @@
 ﻿using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
-using System.ComponentModel;
 
 namespace Ticket_Based_Request_System.Services
 {

@@ -1,7 +1,113 @@
-﻿
-@{
+﻿@{
     ViewBag.Title = "Login";
+    Layout = null;   // keep it blank (no navbar)
 }
 
-<h2>Login</h2>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login</title>
 
+    @Styles.Render("~/Content/css")
+</head>
+
+<body class="bg-light">
+
+    <div class="container min-vh-100 d-flex justify-content-center align-items-center">
+        <div class="card shadow-sm border-0 rounded-4" style="max-width: 420px; width: 100%;">
+            <div class="card-body p-4 p-md-5">
+
+                <h2 class="fw-bold text-center mb-2">Welcome Back</h2>
+                <p class="text-muted text-center mb-4">
+                    Enter your details to access your tickets
+                </p>
+
+                <form id="loginForm">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="email">Email Address</label>
+                        <input id="email" type="email" class="form-control form-control-lg w-100"
+                               placeholder="name@example.com" name="email" autocomplete="on" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="password">Password</label>
+                        <input id="password" type="password" class="form-control form-control-lg"
+                               placeholder="*******" name="password" required />
+                    </div>
+
+                    <div id="errorMessage" class="alert alert-danger d-none" role="alert"></div>
+
+                    <button type="submit" id="loginBtn" class="btn btn-primary btn-lg w-100 mt-2">
+                        Sign In
+                    </button>
+                </form>
+
+                <div class="text-center mt-4">
+                    <a href="/Auth/Signup" class="text-decoration-none fw-semibold">
+                        Don't have an account? Sign Up
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+
+    <script>
+        $(document).ready(function () {
+            $('#loginForm').on('submit', function (e) {
+                e.preventDefault();
+
+                const email = $('#email').val();
+                const password = $('#password').val();
+                const $errorMessage = $('#errorMessage');
+                const $loginBtn = $('#loginBtn');
+
+                // Clear previous errors
+                $errorMessage.addClass('d-none');
+
+                // Disable button and show loading state
+                $loginBtn.prop('disabled', true).text('Signing in...');
+
+                // Call Azure Function (adjust port if your function runs on a different port)
+                $.ajax({
+                    url: 'http://localhost:7255/api/auth/login',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        email: email,
+                        password: password
+                    }),
+                    success: function (response) {
+                        // Store user data in session storage
+                        sessionStorage.setItem('userId', response.userId);
+                        sessionStorage.setItem('employeeCode', response.employeeCode);
+                        sessionStorage.setItem('role', response.role);
+                        sessionStorage.setItem('rolePrefix', response.rolePrefix);
+                        sessionStorage.setItem('userName', response.name);
+
+                        // Redirect to home or dashboard
+                        window.location.href = '/Home/Index';
+                    },
+                    error: function (xhr) {
+                        // Re-enable button
+                        $loginBtn.prop('disabled', false).text('Sign In');
+
+                        // Show error message
+                        if (xhr.status === 401) {
+                            $errorMessage.text('Invalid email or password. Please try again.').removeClass('d-none');
+                        } else {
+                            $errorMessage.text('An error occurred. Please try again later.').removeClass('d-none');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
