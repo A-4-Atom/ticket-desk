@@ -82,6 +82,47 @@ namespace TicketPlatform.Controllers
 
             return RedirectToAction("Login");
         }
+        [HttpPost]
+        public ActionResult SignUp(string fullName, string email, string password, string role)
+        {
+            try
+            {
+                var functionUrl = "http://localhost:7255/api/auth/signup";
+
+                using (var client = new HttpClient())
+                {
+                    var payload = new
+                    {
+                        name = fullName,
+                        email = email,
+                        password = password,
+                        role = role
+                    };
+
+                    var json = JsonConvert.SerializeObject(payload);
+
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                    var response = client.PostAsync(functionUrl, content).Result;
+
+                    // If signup failed
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        TempData["Error"] = "Signup failed. Please check details or try another email.";
+                        return RedirectToAction("SignUp");
+                    }
+
+                    // Success → redirect to login
+                    TempData["Success"] = "Account created successfully! Please login.";
+                    return RedirectToAction("Login");
+                }
+            }
+            catch (Exception)
+            {
+                TempData["Error"] = "Something went wrong. Please try again.";
+                return RedirectToAction("SignUp");
+            }
+        }
 
     }
 
