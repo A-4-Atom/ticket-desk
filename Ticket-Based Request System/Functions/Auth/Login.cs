@@ -46,10 +46,11 @@ namespace Ticket_Based_Request_System.Functions.Auth
                 var res = req.CreateResponse(HttpStatusCode.OK);
                 await res.WriteAsJsonAsync(new
                 {
-                    userId = user.id,
-                    user.employeeCode,
-                    user.role,
-                    user.rolePrefix
+                    userId = user.id?.ToString(),
+                    employeeCode = user.employeeCode?.ToString(),
+                    role = user.role?.ToString(),
+                    rolePrefix = user.rolePrefix?.ToString(),
+                    name = user.name?.ToString(),
                 });
 
                 return res;

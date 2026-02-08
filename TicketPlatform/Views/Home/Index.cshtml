@@ -1,5 +1,11 @@
 ﻿@{
     ViewBag.Title = "Dashboard";
+
+    // If user is not logged in
+    if (Session["UserId"] == null)
+    {
+        Response.Redirect("/Auth/Login");
+    }
 }
 
 <div class="container mt-5">
@@ -7,12 +13,21 @@
         <div class="col-12">
             <div class="card shadow-sm border-0">
                 <div class="card-body p-4">
-                    <h1 class="display-5 fw-bold mb-2">Welcome, <span id="userName">User</span>! 👋</h1>
-                    <p class="text-muted mb-4">Employee Code: <span id="employeeCode" class="badge bg-primary"></span></p>
+                    <h1 class="display-5 fw-bold mb-2">
+                        Welcome, <span>@(Session["UserName"] ?? "User")</span>! 👋
+                    </h1>
+
+                    <p class="text-muted mb-4">
+                        Employee Code:
+                        <span class="badge bg-primary">
+                            @(Session["EmployeeCode"] ?? "N/A")
+                        </span>
+                    </p>
+
                     <p class="lead">You're successfully logged into the Ticket Platform.</p>
-                    
+
                     <div class="mt-4">
-                        <button class="btn btn-danger" id="logoutBtn">Logout</button>
+                        <a href="/Auth/Logout" class="btn btn-danger">Logout</a>
                     </div>
                 </div>
             </div>
@@ -25,65 +40,36 @@
                 <div class="card-body">
                     <h5 class="card-title">Your Role</h5>
                     <p class="card-text">
-                        <span class="badge bg-success fs-6" id="userRole"></span>
+                        <span class="badge bg-success fs-6">
+                            @(Session["Role"] ?? "N/A")
+                        </span>
                     </p>
                 </div>
             </div>
         </div>
+
         <div class="col-md-4">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
                     <h5 class="card-title">User ID</h5>
                     <p class="card-text">
-                        <code id="userId" class="fs-6"></code>
+                        <code class="fs-6">@(Session["UserId"] ?? "")</code>
                     </p>
                 </div>
             </div>
         </div>
+
         <div class="col-md-4">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
                     <h5 class="card-title">Role Prefix</h5>
                     <p class="card-text">
-                        <span class="badge bg-info fs-6" id="rolePrefix"></span>
+                        <span class="badge bg-info fs-6">
+                            @(Session["RolePrefix"] ?? "N/A")
+                        </span>
                     </p>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-@section Scripts {
-    <script>
-        $(document).ready(function () {
-            // Check if user is logged in
-            const userName = sessionStorage.getItem('userName');
-            const userId = sessionStorage.getItem('userId');
-            const employeeCode = sessionStorage.getItem('employeeCode');
-            const role = sessionStorage.getItem('role');
-            const rolePrefix = sessionStorage.getItem('rolePrefix');
-
-            if (!userId) {
-                // User not logged in, redirect to login page
-                window.location.href = '/Auth/Login';
-                return;
-            }
-
-            // Display user information
-            $('#userName').text(userName || 'User');
-            $('#employeeCode').text(employeeCode || 'N/A');
-            $('#userId').text(userId);
-            $('#userRole').text(role || 'N/A');
-            $('#rolePrefix').text(rolePrefix || 'N/A');
-
-            // Logout functionality
-            $('#logoutBtn').on('click', function () {
-                // Clear session storage
-                sessionStorage.clear();
-                
-                // Redirect to login page
-                window.location.href = '/Auth/Login';
-            });
-        });
-    </script>
-}
