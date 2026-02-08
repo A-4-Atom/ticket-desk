@@ -22,7 +22,6 @@ namespace TicketPlatform.Controllers
         {
             try
             {
-                // 1) Call Azure Function
                 var functionUrl = "http://localhost:7255/api/auth/login";
 
                 using (var client = new HttpClient())
@@ -39,26 +38,22 @@ namespace TicketPlatform.Controllers
 
                     var response = client.PostAsync(functionUrl, content).Result;
 
-                    // If login failed
                     if (!response.IsSuccessStatusCode)
                     {
                         TempData["Error"] = "Invalid email or password.";
                         return RedirectToAction("Login");
                     }
 
-                    // 2) Read JSON response
                     var responseJson = response.Content.ReadAsStringAsync().Result;
 
                     var user = JsonConvert.DeserializeObject<LoginResponse>(responseJson);
 
-                    // 3) Store user in SESSION (server-side)
                     Session["UserId"] = user.userId;
                     Session["EmployeeCode"] = user.employeeCode;
                     Session["Role"] = user.role;
                     Session["RolePrefix"] = user.rolePrefix;
                     Session["UserName"] = user.name;
 
-                    // 4) Redirect after successful login
                     return RedirectToAction("Index", "Home");
                 }
             }
@@ -105,14 +100,12 @@ namespace TicketPlatform.Controllers
 
                     var response = client.PostAsync(functionUrl, content).Result;
 
-                    // If signup failed
                     if (!response.IsSuccessStatusCode)
                     {
                         TempData["Error"] = "Signup failed. Please check details or try another email.";
                         return RedirectToAction("SignUp");
                     }
 
-                    // Success → redirect to login
                     TempData["Success"] = "Account created successfully! Please login.";
                     return RedirectToAction("Login");
                 }
@@ -126,7 +119,6 @@ namespace TicketPlatform.Controllers
 
     }
 
-    // This class should match the Azure Function JSON response
     public class LoginResponse
     {
         public string userId { get; set; }
