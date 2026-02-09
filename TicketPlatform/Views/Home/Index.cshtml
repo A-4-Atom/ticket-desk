@@ -1,89 +1,299 @@
-﻿@{
-    ViewBag.Title = "Dashboard";
+﻿@model List<TicketPlatform.Models.Ticket>
+@{
+    ViewBag.Title = "All Tickets";
+    Layout = null;
+
+    if (Session["UserId"] == null)
+    {
+        Response.Redirect("/Auth/Login");
+    }
+
+    var userName = (Session["UserName"] ?? "User").ToString();
+    var role = (Session["Role"] ?? "User").ToString();
 }
 
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow-sm border-0">
-                <div class="card-body p-4">
-                    <h1 class="display-5 fw-bold mb-2">Welcome, <span id="userName">User</span>! 👋</h1>
-                    <p class="text-muted mb-4">Employee Code: <span id="employeeCode" class="badge bg-primary"></span></p>
-                    <p class="lead">You're successfully logged into the Ticket Platform.</p>
-                    
-                    <div class="mt-4">
-                        <button class="btn btn-danger" id="logoutBtn">Logout</button>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ticket App</title>
+
+    @Styles.Render("~/Content/css")
+
+    <style>
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        /* Fix offcanvas height and make sure logout stays visible */
+        #mobileSidebar .offcanvas-body {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+
+    <!-- MOBILE TOP BAR -->
+    <div class="d-md-none bg-white border-bottom sticky-top">
+        <div class="container-fluid py-2 d-flex align-items-center justify-content-between">
+
+            <button class="btn btn-outline-secondary"
+                    type="button"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#mobileSidebar">
+                ☰
+            </button>
+
+            <div class="fw-bold">Ticket App</div>
+
+            <button class="btn btn-primary"
+                    type="button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#createTicketModal">
+                + New
+            </button>
+
+        </div>
+    </div>
+
+    <div class="d-flex">
+
+        <!-- DESKTOP SIDEBAR -->
+        <aside class="d-none d-md-flex flex-column bg-white border-end vh-100 position-fixed top-0 start-0 p-3"
+               style="width: 280px;">
+
+            <div class="d-flex align-items-center gap-2 mb-4">
+                <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center fw-bold"
+                     style="width: 36px; height: 36px;">
+                    T
+                </div>
+                <div class="fw-bold">Ticket App</div>
+            </div>
+
+            <button class="btn btn-primary w-100 mb-4"
+                    data-bs-toggle="modal"
+                    data-bs-target="#createTicketModal">
+                + New Ticket
+            </button>
+
+            <div class="nav nav-pills flex-column gap-1">
+                <a class="nav-link active" href="#">All Tickets</a>
+                <a class="nav-link text-dark" href="#">Open</a>
+                <a class="nav-link text-dark" href="#">Resolved</a>
+            </div>
+
+            <div class="mt-auto pt-3 border-top">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-secondary-subtle d-flex align-items-center justify-content-center fw-bold"
+                         style="width: 38px; height: 38px;">
+                        @userName.Substring(0, 1).ToUpper()
+                    </div>
+
+                    <div class="small">
+                        <div class="fw-bold">@userName</div>
+                        <div class="text-muted">@role</div>
                     </div>
                 </div>
+
+                <a href="/Auth/Logout" class="btn btn-link text-danger px-0 mt-3 fw-bold text-decoration-none">
+                    Sign Out
+                </a>
+            </div>
+        </aside>
+
+        <!-- DESKTOP SPACER -->
+        <div class="d-none d-md-block" style="width:280px;"></div>
+
+        <!-- MAIN CONTENT -->
+        <main class="flex-grow-1 p-3 p-md-4" style="min-width: 0;">
+
+            <h1 class="h3 fw-bold mb-4">My Tickets</h1>
+            <div class="alert alert-info">
+                Session UserId: @Session["UserId"]
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-3 p-md-4">
+
+                    <div class="table-responsive-md">
+                        <table class="table align-middle mb-0">
+                            <thead class="text-uppercase small text-muted">
+                                <tr>
+                                    <th class="text-nowrap">Ref ID</th>
+                                    <th style="min-width: 260px;">Ticket Details</th>
+                                    <th class="text-nowrap">Category</th>
+                                    <th class="text-nowrap">Status</th>
+                                    <th class="text-nowrap">Created</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="ticketsBody">
+                                @if (Model != null && Model.Count > 0)
+                                {
+                                    foreach (var t in Model)
+                                    {
+                                        <tr>
+                                            <td class="text-nowrap fw-bold">@t.confirmationNumber</td>
+
+                                            <td>
+                                                <div class="fw-semibold">@t.title</div>
+                                            </td>
+
+                                            <td class="text-nowrap">@t.category</td>
+
+                                            <td class="text-nowrap">
+                                                <span class="badge bg-secondary">@t.status</span>
+                                            </td>
+
+                                            <td class="text-nowrap">@t.createdAt</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            No tickets found.
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <hr class="my-4" />
+
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="text-muted small">Page 1 of 1</div>
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-secondary btn-sm" disabled>‹</button>
+                            <button class="btn btn-outline-secondary btn-sm" disabled>›</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MOBILE SIDEBAR -->
+    <div class="offcanvas offcanvas-start"
+         tabindex="-1"
+         id="mobileSidebar"
+         style="width: min(85vw, 320px);">
+
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title fw-bold">TicketMaster</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+        </div>
+
+        <div class="offcanvas-body p-3">
+
+            <button class="btn btn-primary w-100 mb-3"
+                    data-bs-toggle="modal"
+                    data-bs-target="#createTicketModal"
+                    data-bs-dismiss="offcanvas">
+                + New Ticket
+            </button>
+
+            <div class="nav nav-pills flex-column gap-1">
+                <a class="nav-link active" href="#">All Tickets</a>
+                <a class="nav-link text-dark" href="#">Open</a>
+                <a class="nav-link text-dark" href="#">Resolved</a>
+            </div>
+
+            <!-- Push user section to bottom -->
+            <div class="mt-auto pt-3 border-top">
+
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-secondary-subtle d-flex align-items-center justify-content-center fw-bold"
+                         style="width: 38px; height: 38px;">
+                        @userName.Substring(0, 1).ToUpper()
+                    </div>
+
+                    <div class="small">
+                        <div class="fw-bold">@userName</div>
+                        <div class="text-muted">@role</div>
+                    </div>
+                </div>
+
+                <a href="/Auth/Logout" class="btn btn-link text-danger px-0 mt-3 fw-bold text-decoration-none">
+                    Sign Out
+                </a>
             </div>
         </div>
     </div>
 
-    <div class="row mt-4" id="userInfo">
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Your Role</h5>
-                    <p class="card-text">
-                        <span class="badge bg-success fs-6" id="userRole"></span>
-                    </p>
+    <!-- CREATE TICKET MODAL -->
+    <div class="modal fade" id="createTicketModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down modal-lg">
+            <div class="modal-content rounded-4 border-0 shadow">
+
+                <div class="modal-header border-0 px-4 pt-4">
+                    <h5 class="modal-title fw-bold">Create New Ticket</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <h5 class="card-title">User ID</h5>
-                    <p class="card-text">
-                        <code id="userId" class="fs-6"></code>
-                    </p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <h5 class="card-title">Role Prefix</h5>
-                    <p class="card-text">
-                        <span class="badge bg-info fs-6" id="rolePrefix"></span>
-                    </p>
+
+                <div class="modal-body px-4 pb-4">
+
+                    <form method="post" action="/Home/CreateTicket">
+
+                        <div class="mb-3">
+                            <label class="form-label text-uppercase small fw-bold text-muted">Title</label>
+                            <input name="title" type="text" class="form-control form-control-lg"
+                                   placeholder="Brief summary of the issue" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-uppercase small fw-bold text-muted">Category</label>
+                            <input name="category" type="text" class="form-control form-control-lg"
+                                   placeholder="Technical, Account, Feature Request..." required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-uppercase small fw-bold text-muted">Description</label>
+                            <textarea name="description" class="form-control" rows="4"
+                                      placeholder="Detailed explanation..." required></textarea>
+                        </div>
+
+                        <!-- attachments later -->
+                        <div class="mb-4">
+                            <label class="form-label text-uppercase small fw-bold text-muted">
+                                Attachments (0/5)
+                            </label>
+
+                            <input class="form-control form-control-lg" type="file" multiple disabled />
+                            <div class="form-text">
+                                Coming soon...
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                Create Ticket
+                            </button>
+                        </div>
+
+                    </form>
+
+
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-@section Scripts {
-    <script>
-        $(document).ready(function () {
-            // Check if user is logged in
-            const userName = sessionStorage.getItem('userName');
-            const userId = sessionStorage.getItem('userId');
-            const employeeCode = sessionStorage.getItem('employeeCode');
-            const role = sessionStorage.getItem('role');
-            const rolePrefix = sessionStorage.getItem('rolePrefix');
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
 
-            if (!userId) {
-                // User not logged in, redirect to login page
-                window.location.href = '/Auth/Login';
-                return;
-            }
-
-            // Display user information
-            $('#userName').text(userName || 'User');
-            $('#employeeCode').text(employeeCode || 'N/A');
-            $('#userId').text(userId);
-            $('#userRole').text(role || 'N/A');
-            $('#rolePrefix').text(rolePrefix || 'N/A');
-
-            // Logout functionality
-            $('#logoutBtn').on('click', function () {
-                // Clear session storage
-                sessionStorage.clear();
-                
-                // Redirect to login page
-                window.location.href = '/Auth/Login';
-            });
-        });
-    </script>
-}
+</body>
+</html>
