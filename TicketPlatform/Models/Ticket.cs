@@ -15,5 +15,6 @@
 
         public string status { get; set; }
         public string createdAt { get; set; }
+        public string confirmationNumber { get; set; }
     }
 }
