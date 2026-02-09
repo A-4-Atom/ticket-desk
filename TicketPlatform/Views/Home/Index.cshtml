@@ -243,34 +243,35 @@
 
                 <div class="modal-body px-4 pb-4">
 
-                    <form id="createTicketForm">
+                    <form method="post" action="/Home/CreateTicket">
 
                         <div class="mb-3">
                             <label class="form-label text-uppercase small fw-bold text-muted">Title</label>
-                            <input type="text" class="form-control form-control-lg"
+                            <input name="title" type="text" class="form-control form-control-lg"
                                    placeholder="Brief summary of the issue" required />
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label text-uppercase small fw-bold text-muted">Category</label>
-                            <input type="text" class="form-control form-control-lg"
+                            <input name="category" type="text" class="form-control form-control-lg"
                                    placeholder="Technical, Account, Feature Request..." required />
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label text-uppercase small fw-bold text-muted">Description</label>
-                            <textarea class="form-control" rows="4"
+                            <textarea name="description" class="form-control" rows="4"
                                       placeholder="Detailed explanation..." required></textarea>
                         </div>
 
+                        <!-- attachments later -->
                         <div class="mb-4">
                             <label class="form-label text-uppercase small fw-bold text-muted">
                                 Attachments (0/5)
                             </label>
 
-                            <input class="form-control form-control-lg" type="file" multiple />
+                            <input class="form-control form-control-lg" type="file" multiple disabled />
                             <div class="form-text">
-                                Images, PDF (Max 5MB each)
+                                Coming soon...
                             </div>
                         </div>
 
@@ -284,6 +285,7 @@
                         </div>
 
                     </form>
+
 
                 </div>
             </div>
