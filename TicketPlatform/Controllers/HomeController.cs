@@ -10,19 +10,16 @@ namespace TicketPlatform.Controllers
 {
     public class HomeController : Controller
     {
-        public async Task<ActionResult> Index()
+        public async Task<ActionResult> Index(int page = 1)
         {
             if (Session["UserId"] == null)
                 return RedirectToAction("Login", "Auth");
 
             var userId = Session["UserId"].ToString();
 
-            var url = $"http://localhost:7255/api/tickets?userId={userId}";
+            var url = $"http://localhost:7071/api/tickets?userId={userId}&page={page}";
 
-            List<Ticket> tickets = new List<Ticket>();
-            System.Diagnostics.Debug.WriteLine("SESSION USERID = " + userId);
-            System.Diagnostics.Debug.WriteLine("API URL = " + url);
-
+            TicketPageResponse apiResult = null;
 
             using (var client = new HttpClient())
             {
@@ -31,12 +28,30 @@ namespace TicketPlatform.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
-                    tickets = JsonConvert.DeserializeObject<List<Ticket>>(json);
+                    apiResult = JsonConvert.DeserializeObject<TicketPageResponse>(json);
                 }
             }
 
-            return View(tickets);
+            if (apiResult == null)
+            {
+                apiResult = new TicketPageResponse
+                {
+                    page = page,
+                    pageSize = 5,
+                    tickets = new List<Ticket>(),
+                    nextPageToken = null
+                };
+            }
+
+            ViewBag.Page = apiResult.page;
+            ViewBag.PageSize = apiResult.pageSize;
+
+            ViewBag.HasNextPage = !string.IsNullOrEmpty(apiResult.nextPageToken);
+            ViewBag.HasPrevPage = page > 1;
+
+            return View(apiResult.tickets);
         }
+
 
         [HttpPost]
         public async Task<ActionResult> CreateTicket(Ticket ticket)
@@ -68,13 +83,12 @@ namespace TicketPlatform.Controllers
                     break;
             }
 
-            // Fill required backend fields
             ticket.userId = Session["UserId"].ToString();
             ticket.employeeCode = (Session["EmployeeCode"] ?? "001").ToString();
             ticket.role = role;
             ticket.rolePrefix = rolePrefix;
 
-            var apiUrl = "http://localhost:7255/api/tickets";
+            var apiUrl = "http://localhost:7071/api/tickets";
 
             using (var client = new HttpClient())
             {
