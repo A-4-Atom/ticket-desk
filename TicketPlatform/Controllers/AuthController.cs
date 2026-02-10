@@ -22,7 +22,7 @@ namespace TicketPlatform.Controllers
         {
             try
             {
-                var functionUrl = "http://localhost:7255/api/auth/login";
+                var functionUrl = "http://localhost:7071/api/auth/login";
 
                 using (var client = new HttpClient())
                 {
@@ -82,7 +82,7 @@ namespace TicketPlatform.Controllers
         {
             try
             {
-                var functionUrl = "http://localhost:7255/api/auth/signup";
+                var functionUrl = "http://localhost:7071/api/auth/signup";
 
                 using (var client = new HttpClient())
                 {
