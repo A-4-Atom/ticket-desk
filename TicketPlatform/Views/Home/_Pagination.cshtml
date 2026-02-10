@@ -1,0 +1,17 @@
+<div class="d-flex align-items-center justify-content-between">
+    <div class="text-muted small">
+        Page @ViewBag.Page
+    </div>
+
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary btn-sm @(ViewBag.HasPrevPage ? "" : "disabled")"
+           href="/Home/Index?page=@(ViewBag.Page - 1)">
+            <
+        </a>
+
+        <a class="btn btn-outline-secondary btn-sm @(ViewBag.HasNextPage ? "" : "disabled")"
+           href="/Home/Index?page=@(ViewBag.Page + 1)">
+            >
+        </a>
+    </div>
+</div>

@@ -1,0 +1,52 @@
+<div class="modal fade" id="createTicketModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-0 px-4 pt-4">
+                <h5 class="modal-title fw-bold">Create New Ticket</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body px-4 pb-4">
+                <form method="post" action="/Home/CreateTicket">
+                    <div class="mb-3">
+                        <label class="form-label text-uppercase small fw-bold text-muted">Title</label>
+                        <input name="title" type="text" class="form-control form-control-lg"
+                               placeholder="Brief summary of the issue" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-uppercase small fw-bold text-muted">Category</label>
+                        <input name="category" type="text" class="form-control form-control-lg"
+                               placeholder="Technical, Account, Feature Request..." required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-uppercase small fw-bold text-muted">Description</label>
+                        <textarea name="description" class="form-control" rows="4"
+                                  placeholder="Detailed explanation..." required></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-uppercase small fw-bold text-muted">
+                            Attachments (0/5)
+                        </label>
+
+                        <input class="form-control form-control-lg" type="file" multiple disabled />
+                        <div class="form-text">
+                            TODO
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            Create Ticket
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
