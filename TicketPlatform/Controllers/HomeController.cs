@@ -40,7 +40,6 @@ namespace TicketPlatform.Controllers
                 }
                 catch (Exception)
                 {
-                    // Any network / deserialization error should not break the page
                     loadError = true;
                 }
             }

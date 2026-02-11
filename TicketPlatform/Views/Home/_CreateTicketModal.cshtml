@@ -122,11 +122,9 @@
                 method: 'POST',
                 body: formData
             }).then(function (response) {
-                // On redirect, browser will follow automatically; just close modal here
                 if (response.redirected) {
                     window.location.href = response.url;
                 } else if (response.ok) {
-                    // Fallback if action returns 200
                     window.location.reload();
                 } else {
                     if (errorBox) {
@@ -136,7 +134,7 @@
                 }
             }).catch(function () {
                 if (errorBox) {
-                    errorBox.textContent = 'Ticket creation failed. Please check your connection and try again.';
+                    errorBox.textContent = 'Ticket creation failed. Please try again.';
                     errorBox.classList.remove('d-none');
                 }
             });
