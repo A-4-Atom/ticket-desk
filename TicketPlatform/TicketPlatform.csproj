@@ -183,6 +183,12 @@
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Auth\SignUp.cshtml" />
     <Content Include="Views\Auth\Login.cshtml" />
+    <Content Include="Views\Shared\_MobileSidebar.cshtml" />
+    <Content Include="Views\Home\_Pagination.cshtml" />
+    <Content Include="Views\Shared\_DesktopSidebar.cshtml" />
+    <Content Include="Views\Shared\_MobileTopBar.cshtml" />
+    <Content Include="Views\Home\_CreateTicketModal.cshtml" />
+    <Content Include="Views\Home\_TicketsTable.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

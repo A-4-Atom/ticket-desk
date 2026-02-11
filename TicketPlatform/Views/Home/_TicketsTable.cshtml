@@ -1,0 +1,86 @@
+@model List<TicketPlatform.Models.Ticket>
+
+<div class="table-responsive">
+    <table class="table align-middle mb-0">
+        <thead class="text-uppercase small text-muted">
+            <tr>
+                <th class="text-nowrap">Ref ID</th>
+                <th style="min-width: 220px;">Ticket Details</th>
+                <th class="text-nowrap d-none d-md-table-cell">Category</th>
+                <th class="text-nowrap d-none d-md-table-cell">Status</th>
+                <th class="text-nowrap d-none d-md-table-cell">Created</th>
+            </tr>
+        </thead>
+
+        <tbody id="ticketsBody">
+        @if (ViewBag.TicketsLoadError == true)
+        {
+            <tr>
+                <td colspan="5" class="text-center text-danger py-4">
+                    Tickets could not be loaded. Please try again later.
+                </td>
+            </tr>
+        }
+        else if (Model != null && Model.Count > 0)
+        {
+            foreach (var t in Model)
+            {
+                <tr>
+                    <td class="text-nowrap fw-bold">@t.confirmationNumber</td>
+
+                    <td>
+                        <div class="fw-semibold">@t.title</div>
+
+                        @if (t.attachments != null && t.attachments.Count > 0)
+                        {
+                            <div class="small mt-1">
+                                <span class="text-muted me-1">Attachments:</span>
+                                @for (int i = 0; i < t.attachments.Count; i++)
+                                {
+                                    var a = t.attachments[i];
+                                    <a href="@a.fileUrl" target="_blank">
+                                        @a.fileName
+                                    </a>
+
+                                    if (i < t.attachments.Count - 1)
+                                    {
+                                        @:<span>, </span>
+                                    }
+                                }
+                            </div>
+                        }
+
+                        <div class="text-muted small d-md-none mt-1">
+                            <span class="me-2">@t.category</span>
+                            <span class="me-2">
+                                @DateTime.Parse(t.createdAt).ToString("yyyy-MM-dd")
+                            </span>
+                            <span>
+                                <span class="badge bg-secondary">@t.status</span>
+                            </span>
+                        </div>
+                    </td>
+
+                    <td class="text-nowrap d-none d-md-table-cell">@t.category</td>
+
+                    <td class="text-nowrap d-none d-md-table-cell">
+                        <span class="badge bg-secondary">@t.status</span>
+                    </td>
+
+                    <td class="text-nowrap d-none d-md-table-cell">
+                        @DateTime.Parse(t.createdAt).ToString("yyyy-MM-dd")
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="5" class="text-center text-muted py-4">
+                    No tickets found.
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

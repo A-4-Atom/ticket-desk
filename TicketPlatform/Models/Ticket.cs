@@ -1,5 +1,15 @@
-﻿namespace TicketPlatform.Models
+﻿using System.Collections.Generic;
+
+namespace TicketPlatform.Models
+
 {
+    public class TicketAttachment
+    {
+        public string fileName { get; set; }
+        public string fileType { get; set; }
+        public string fileUrl { get; set; }
+        public string uploadedAt { get; set; }
+    }
     public class Ticket
     {
         public string id { get; set; }
@@ -16,5 +26,7 @@
         public string status { get; set; }
         public string createdAt { get; set; }
         public string confirmationNumber { get; set; }
+
+        public List<TicketAttachment> attachments { get; set; }
     }
 }
