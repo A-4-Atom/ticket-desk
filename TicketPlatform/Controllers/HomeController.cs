@@ -105,7 +105,7 @@ namespace TicketPlatform.Controllers
 
             var apiUrl = "http://localhost:7071/api/tickets";
 
-            // Build multipart/form-data matching the API contract
+            // Build multipart/form-data
             var formData = new MultipartFormDataContent();
             formData.Add(new StringContent(ticket.userId ?? string.Empty), "userId");
             formData.Add(new StringContent(ticket.employeeCode ?? string.Empty), "employeeCode");
@@ -118,7 +118,7 @@ namespace TicketPlatform.Controllers
             formData.Add(new StringContent(ticket.description ?? string.Empty), "description");
             formData.Add(new StringContent(ticket.category ?? string.Empty), "category");
 
-            // Attach uploaded files (max 5) from the current request
+            // Attach uploaded files
             var files = Request?.Files;
             if (files != null)
             {

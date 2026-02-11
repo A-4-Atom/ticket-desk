@@ -96,7 +96,7 @@
 
             var formData = new FormData();
 
-            // These values should match what the API expects (as in your Postman example)
+            
             formData.append('title', title);
             formData.append('category', category);
             formData.append('description', description);
@@ -117,7 +117,7 @@
                 });
             }
 
-            // Post to MVC action which will forward to API
+            // Post to Controller
             fetch('/Home/CreateTicket', {
                 method: 'POST',
                 body: formData
