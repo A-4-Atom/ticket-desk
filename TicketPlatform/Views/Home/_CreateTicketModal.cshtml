@@ -7,7 +7,8 @@
             </div>
 
             <div class="modal-body px-4 pb-4">
-                <form method="post" action="/Home/CreateTicket">
+                <form id="createTicketForm">
+                    <div id="createTicketError" class="alert alert-danger d-none" role="alert"></div>
                     <div class="mb-3">
                         <label class="form-label text-uppercase small fw-bold text-muted">Title</label>
                         <input name="title" type="text" class="form-control form-control-lg"
@@ -28,12 +29,12 @@
 
                     <div class="mb-4">
                         <label class="form-label text-uppercase small fw-bold text-muted">
-                            Attachments (0/5)
+                            Attachments (<span id="attachmentCount">0</span>/5)
                         </label>
 
-                        <input class="form-control form-control-lg" type="file" multiple disabled />
+                        <input id="attachments" name="attachments" class="form-control form-control-lg" type="file" multiple />
                         <div class="form-text">
-                            TODO
+                            You can upload up to 5 files.
                         </div>
                     </div>
 
@@ -50,3 +51,95 @@
         </div>
     </div>
 </div>
+
+<script>
+    (function () {
+        var form = document.getElementById('createTicketForm');
+        if (!form) return;
+
+        var filesInput = document.getElementById('attachments');
+        var countSpan = document.getElementById('attachmentCount');
+        var errorBox = document.getElementById('createTicketError');
+
+        if (filesInput && countSpan) {
+            filesInput.addEventListener('change', function () {
+                var files = Array.prototype.slice.call(filesInput.files || []);
+                if (files.length > 5) {
+                    // Enforce max 5 files client-side and show message in modal
+                    if (errorBox) {
+                        errorBox.textContent = 'You can upload a maximum of 5 attachments.';
+                        errorBox.classList.remove('d-none');
+                    }
+                    filesInput.value = '';
+                    countSpan.textContent = '0';
+                } else {
+                    countSpan.textContent = files.length.toString();
+                    if (errorBox) {
+                        errorBox.classList.add('d-none');
+                        errorBox.textContent = '';
+                    }
+                }
+            });
+        }
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            if (errorBox) {
+                errorBox.classList.add('d-none');
+                errorBox.textContent = '';
+            }
+
+            var title = form.querySelector('input[name="title"]').value;
+            var category = form.querySelector('input[name="category"]').value;
+            var description = form.querySelector('textarea[name="description"]').value;
+
+            var formData = new FormData();
+
+            // These values should match what the API expects (as in your Postman example)
+            formData.append('title', title);
+            formData.append('category', category);
+            formData.append('description', description);
+
+            // Attach files
+            if (filesInput && filesInput.files) {
+                var files = Array.prototype.slice.call(filesInput.files);
+                if (files.length > 5) {
+                    if (errorBox) {
+                        errorBox.textContent = 'You can upload a maximum of 5 attachments.';
+                        errorBox.classList.remove('d-none');
+                    }
+                    return;
+                }
+
+                files.forEach(function (file) {
+                    formData.append('attachments', file);
+                });
+            }
+
+            // Post to MVC action which will forward to API
+            fetch('/Home/CreateTicket', {
+                method: 'POST',
+                body: formData
+            }).then(function (response) {
+                // On redirect, browser will follow automatically; just close modal here
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else if (response.ok) {
+                    // Fallback if action returns 200
+                    window.location.reload();
+                } else {
+                    if (errorBox) {
+                        errorBox.textContent = 'Ticket creation failed. Please try again.';
+                        errorBox.classList.remove('d-none');
+                    }
+                }
+            }).catch(function () {
+                if (errorBox) {
+                    errorBox.textContent = 'Ticket creation failed. Please check your connection and try again.';
+                    errorBox.classList.remove('d-none');
+                }
+            });
+        });
+    })();
+</script>

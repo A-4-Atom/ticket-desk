@@ -20,15 +20,28 @@ namespace TicketPlatform.Controllers
             var url = $"http://localhost:7071/api/tickets?userId={userId}&page={page}";
 
             TicketPageResponse apiResult = null;
+            var loadError = false; 
 
             using (var client = new HttpClient())
             {
-                var response = await client.GetAsync(url);
-
-                if (response.IsSuccessStatusCode)
+                try
                 {
-                    var json = await response.Content.ReadAsStringAsync();
-                    apiResult = JsonConvert.DeserializeObject<TicketPageResponse>(json);
+                    var response = await client.GetAsync(url);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var json = await response.Content.ReadAsStringAsync();
+                        apiResult = JsonConvert.DeserializeObject<TicketPageResponse>(json);
+                    }
+                    else
+                    {
+                        loadError = true;
+                    }
+                }
+                catch (Exception)
+                {
+                    // Any network / deserialization error should not break the page
+                    loadError = true;
                 }
             }
 
@@ -48,6 +61,9 @@ namespace TicketPlatform.Controllers
 
             ViewBag.HasNextPage = !string.IsNullOrEmpty(apiResult.nextPageToken);
             ViewBag.HasPrevPage = page > 1;
+
+            // Expose error flag so the view can render a friendly message
+            ViewBag.TicketsLoadError = loadError;
 
             return View(apiResult.tickets);
         }
@@ -90,12 +106,39 @@ namespace TicketPlatform.Controllers
 
             var apiUrl = "http://localhost:7071/api/tickets";
 
+            // Build multipart/form-data matching the API contract
+            var formData = new MultipartFormDataContent();
+            formData.Add(new StringContent(ticket.userId ?? string.Empty), "userId");
+            formData.Add(new StringContent(ticket.employeeCode ?? string.Empty), "employeeCode");
+            formData.Add(new StringContent(ticket.role ?? string.Empty), "role");
+            if (!string.IsNullOrEmpty(ticket.rolePrefix))
+            {
+                formData.Add(new StringContent(ticket.rolePrefix), "rolePrefix");
+            }
+            formData.Add(new StringContent(ticket.title ?? string.Empty), "title");
+            formData.Add(new StringContent(ticket.description ?? string.Empty), "description");
+            formData.Add(new StringContent(ticket.category ?? string.Empty), "category");
+
+            // Attach uploaded files (max 5) from the current request
+            var files = Request?.Files;
+            if (files != null)
+            {
+                var count = Math.Min(files.Count, 5);
+                for (int i = 0; i < count; i++)
+                {
+                    var file = files[i];
+                    if (file == null || file.ContentLength <= 0)
+                        continue;
+
+                    var streamContent = new StreamContent(file.InputStream);
+                    streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType ?? "application/octet-stream");
+                    formData.Add(streamContent, "attachments", file.FileName);
+                }
+            }
+
             using (var client = new HttpClient())
             {
-                var json = JsonConvert.SerializeObject(ticket);
-                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-
-                var response = await client.PostAsync(apiUrl, content);
+                var response = await client.PostAsync(apiUrl, formData);
 
                 if (!response.IsSuccessStatusCode)
                 {
