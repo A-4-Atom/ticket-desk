@@ -10,23 +10,85 @@
                 @using (Html.BeginForm("CreateTicket", "Home", FormMethod.Post, new { id = "createTicketForm", enctype = "multipart/form-data" }))
                 {
                     @Html.AntiForgeryToken()
+                    <input type="hidden" name="ticketTypeKey" id="ticketTypeKey" />
+                    <input type="hidden" name="category" id="ticketCategory" />
+
+                    <div class="alert alert-light border d-none mb-3" id="requesterInfo">
+                        <div class="d-flex justify-content-between small">
+                            <div><strong>Requester:</strong> @Session["UserName"]</div>
+                            <div><strong>Employee Code:</strong> @Session["EmployeeCode"]</div>
+                        </div>
+                    </div>
                     <div id="createTicketError" class="alert alert-danger d-none" role="alert"></div>
-                    <div class="mb-3">
-                        <label class="form-label text-uppercase small fw-bold text-muted">Title</label>
-                        <input name="title" type="text" class="form-control form-control-lg"
-                               placeholder="Brief summary of the issue" required />
+                    <div id="normalTicketFields">
+                        <div class="mb-3">
+                            <label class="form-label text-uppercase small fw-bold text-muted">Title</label>
+                            <input name="title" id="title" type="text" class="form-control form-control-lg"
+                                   placeholder="Brief summary of the issue" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-uppercase small fw-bold text-muted">Category</label>
+                            <input name="category" id="categoryInput" type="text" class="form-control form-control-lg"
+                                   placeholder="IT Support, HR Support, General Service..." required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-uppercase small fw-bold text-muted">Description</label>
+                            <textarea name="description" id="description" class="form-control" rows="4"
+                                      placeholder="Detailed explanation..." required></textarea>
+                        </div>
+
+                        <div class="form-check mb-3 d-none" id="confidentialityWrapper">
+                            <input class="form-check-input" type="checkbox" value="true" id="isConfidential" name="isConfidential">
+                            <label class="form-check-label small" for="isConfidential">
+                                Mark as confidential (HR will restrict visibility)
+                            </label>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label text-uppercase small fw-bold text-muted">Category</label>
-                        <input name="category" type="text" class="form-control form-control-lg"
-                               placeholder="Technical, Account, Feature Request..." required />
-                    </div>
+                    <div id="adminTicketFields" class="d-none">
+                        <div id="newEmployeeFields" class="d-none">
+                            <div class="mb-3">
+                                <label class="form-label text-uppercase small fw-bold text-muted">New Hire Name</label>
+                                <input name="newHireName" type="text" class="form-control form-control-lg" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-uppercase small fw-bold text-muted">Start Date</label>
+                                <input name="startDate" type="date" class="form-control form-control-lg" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-uppercase small fw-bold text-muted">Position / Role</label>
+                                <input name="position" type="text" class="form-control form-control-lg" />
+                            </div>
+                        </div>
 
-                    <div class="mb-3">
-                        <label class="form-label text-uppercase small fw-bold text-muted">Description</label>
-                        <textarea name="description" class="form-control" rows="4"
-                                  placeholder="Detailed explanation..." required></textarea>
+                        <div id="employeeSeparationFields" class="d-none">
+                            <div class="mb-3">
+                                <label class="form-label text-uppercase small fw-bold text-muted">Employee Name</label>
+                                <input name="employeeName" type="text" class="form-control form-control-lg" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-uppercase small fw-bold text-muted">Last Working Day</label>
+                                <input name="lastWorkingDay" type="date" class="form-control form-control-lg" />
+                            </div>
+                        </div>
+
+                        <div id="assetOrderFields" class="d-none">
+                            <div class="mb-3">
+                                <label class="form-label text-uppercase small fw-bold text-muted">Item Name</label>
+                                <input name="itemName" type="text" class="form-control form-control-lg" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-uppercase small fw-bold text-muted">Quantity</label>
+                                <input name="quantity" type="number" min="1" class="form-control form-control-lg" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-uppercase small fw-bold text-muted">Description</label>
+                            <textarea name="description" class="form-control" rows="4"></textarea>
+                        </div>
                     </div>
 
                     <div class="mb-4">
@@ -93,9 +155,20 @@
                 errorBox.textContent = '';
             }
 
-            var title = form.querySelector('input[name="title"]').value;
-            var category = form.querySelector('input[name="category"]').value;
-            var description = form.querySelector('textarea[name="description"]').value;
+            var titleInput = form.querySelector('input[name="title"]');
+            var descriptionInput = form.querySelector('textarea[name="description"]');
+            var ticketTypeKeyInput = document.getElementById('ticketTypeKey');
+            var categoryHiddenInput = document.getElementById('ticketCategory');
+            var categoryVisibleInput = document.getElementById('categoryInput');
+
+            var title = titleInput ? titleInput.value : '';
+            var category = '';
+            if (categoryVisibleInput && categoryVisibleInput.value) {
+                category = categoryVisibleInput.value;
+            } else if (categoryHiddenInput && categoryHiddenInput.value) {
+                category = categoryHiddenInput.value;
+            }
+            var description = descriptionInput ? descriptionInput.value : '';
 
             var formData = new FormData();
 
@@ -107,6 +180,15 @@
             formData.append('title', title);
             formData.append('category', category);
             formData.append('description', description);
+
+            if (ticketTypeKeyInput) {
+                formData.append('ticketTypeKey', ticketTypeKeyInput.value || 'it-support');
+            }
+
+            var isConfidentialCheckbox = document.getElementById('isConfidential');
+            if (isConfidentialCheckbox && isConfidentialCheckbox.checked) {
+                formData.append('isConfidential', 'true');
+            }
 
             // Attach files
             if (filesInput && filesInput.files) {

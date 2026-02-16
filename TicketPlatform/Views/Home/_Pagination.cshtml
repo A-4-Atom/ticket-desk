@@ -5,12 +5,12 @@
 
     <div class="d-flex gap-2">
         <a class="btn btn-outline-secondary btn-sm @(ViewBag.HasPrevPage ? "" : "disabled")"
-           href="/Home/Index?page=@(ViewBag.Page - 1)">
+           href="@Url.Action("MyTickets", "Home", new { page = ViewBag.Page - 1 })">
             <
         </a>
 
         <a class="btn btn-outline-secondary btn-sm @(ViewBag.HasNextPage ? "" : "disabled")"
-           href="/Home/Index?page=@(ViewBag.Page + 1)">
+           href="@Url.Action("MyTickets", "Home", new { page = ViewBag.Page + 1 })">
             >
         </a>
     </div>

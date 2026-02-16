@@ -1,0 +1,15 @@
+@model TicketPlatform.Models.TicketTypeViewModel
+
+<div class="card border-0 shadow-sm h-100 rounded-4 ticket-type-card"
+     role="button"
+     data-ticket-key="@Model.Key"
+     data-ticket-category="@Model.Category"
+     data-requires-confidentiality="@(Model.RequiresConfidentiality ? "true" : "false")">
+    <div class="card-body py-3 px-3 px-md-4">
+        <div class="d-flex flex-column">
+            <div class="fw-bold mb-1">@Model.Title</div>
+            <div class="text-muted small mb-2">@Model.Subtitle</div>
+            <div class="mt-2 small text-primary fw-semibold">Create request</div>
+        </div>
+    </div>
+</div>

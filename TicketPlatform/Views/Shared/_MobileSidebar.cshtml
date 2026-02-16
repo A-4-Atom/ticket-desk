@@ -12,18 +12,18 @@
 
     <div class="offcanvas-body p-3">
 
-        <button class="btn btn-primary w-100 mb-3"
-                data-bs-toggle="modal"
-                data-bs-target="#createTicketModal"
-                data-bs-dismiss="offcanvas">
-            + New Ticket
-        </button>
+		<button class="btn btn-primary w-100 mb-3"
+				data-bs-toggle="modal"
+				data-bs-target="#createTicketModal"
+				data-bs-dismiss="offcanvas"
+				id="mobileQuickRequestButton">
+			+ Quick Request
+		</button>
 
-        <div class="nav nav-pills flex-column gap-1">
-            <a class="nav-link active" href="#">All Tickets</a>
-            <a class="nav-link text-dark" href="#">Open</a>
-            <a class="nav-link text-dark" href="#">Resolved</a>
-        </div>
+		<div class="nav nav-pills flex-column gap-1">
+			<a class="nav-link" href="@Url.Action("Index", "Home")">Home</a>
+			<a class="nav-link" href="@Url.Action("MyTickets", "Home")">My Tickets</a>
+		</div>
 
         <div class="mt-auto pt-3 border-top">
             <div class="d-flex align-items-center gap-2">

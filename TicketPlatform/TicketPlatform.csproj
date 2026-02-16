@@ -129,6 +129,7 @@
     <Compile Include="Models\RolePrefix.cs" />
     <Compile Include="Models\TicketPageResponse.cs" />
     <Compile Include="Models\Ticket.cs" />
+    <Compile Include="Models\TicketTypeViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\ApiClient.cs" />
     <Compile Include="Services\AuthService.cs" />
@@ -197,6 +198,8 @@
     <Content Include="Views\Shared\_MobileTopBar.cshtml" />
     <Content Include="Views\Home\_CreateTicketModal.cshtml" />
     <Content Include="Views\Home\_TicketsTable.cshtml" />
+    <Content Include="Views\Home\MyTickets.cshtml" />
+    <Content Include="Views\Shared\_TicketTypeCard.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -25,7 +25,15 @@ namespace TicketPlatform.Controllers
             _ticketService = ticketService;
         }
 
-        public async Task<ActionResult> Index(int page = 1)
+        public ActionResult Index()
+        {
+            if (Session["UserId"] == null)
+                return RedirectToAction("Login", "Auth");
+
+            return View();
+        }
+
+        public async Task<ActionResult> MyTickets(int page = 1)
         {
             if (Session["UserId"] == null)
                 return RedirectToAction("Login", "Auth");
@@ -65,10 +73,9 @@ namespace TicketPlatform.Controllers
             ViewBag.HasNextPage = !string.IsNullOrEmpty(apiResult.nextPageToken);
             ViewBag.HasPrevPage = page > 1;
 
-            // Expose error flag so the view can render a friendly message
             ViewBag.TicketsLoadError = loadError;
 
-            return View(apiResult.tickets);
+            return View("MyTickets", apiResult.tickets);
         }
 
 
