@@ -1,15 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using Newtonsoft.Json;
 using TicketPlatform.Models;
+using TicketPlatform.Services;
 
 namespace TicketPlatform.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly ITicketService _ticketService;
+
+        public HomeController()
+            : this(new TicketService())
+        {
+        }
+
+        // This constructor is useful for unit testing with a mocked ITicketService
+        public HomeController(ITicketService ticketService)
+        {
+            _ticketService = ticketService;
+        }
+
         public async Task<ActionResult> Index(int page = 1)
         {
             if (Session["UserId"] == null)
@@ -17,31 +32,20 @@ namespace TicketPlatform.Controllers
 
             var userId = Session["UserId"].ToString();
 
-            var url = $"http://localhost:7071/api/tickets?userId={userId}&page={page}";
-
+            var loadError = false;
             TicketPageResponse apiResult = null;
-            var loadError = false; 
 
-            using (var client = new HttpClient())
+            try
             {
-                try
-                {
-                    var response = await client.GetAsync(url);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var json = await response.Content.ReadAsStringAsync();
-                        apiResult = JsonConvert.DeserializeObject<TicketPageResponse>(json);
-                    }
-                    else
-                    {
-                        loadError = true;
-                    }
-                }
-                catch (Exception)
+                apiResult = await _ticketService.GetTicketsAsync(userId, page).ConfigureAwait(false);
+                if (apiResult == null)
                 {
                     loadError = true;
                 }
+            }
+            catch (Exception)
+            {
+                loadError = true;
             }
 
             if (apiResult == null)
@@ -69,57 +73,25 @@ namespace TicketPlatform.Controllers
 
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<ActionResult> CreateTicket(Ticket ticket)
         {
             if (Session["UserId"] == null)
                 return RedirectToAction("Login", "Auth");
 
-            // Get role from session
-            var role = (Session["Role"] ?? "User").ToString();
-
-            string rolePrefix = null;
-
-            switch (role)
-            {
-                case "Sales Rep":
-                    rolePrefix = "W";
-                    break;
-
-                case "SVP":
-                    rolePrefix = "X";
-                    break;
-
-                case "IT Manager":
-                    rolePrefix = "Y";
-                    break;
-
-                default:
-                    rolePrefix = null;
-                    break;
-            }
+            // Get role from session and resolve role prefix via helper
+            var roleString = (Session["Role"] ?? "User").ToString();
+            var userRole = RolePrefixHelper.ParseRole(roleString);
+            var rolePrefix = RolePrefixHelper.GetPrefix(userRole);
 
             ticket.userId = Session["UserId"].ToString();
             ticket.employeeCode = (Session["EmployeeCode"] ?? "001").ToString();
-            ticket.role = role;
+            ticket.role = roleString;
             ticket.rolePrefix = rolePrefix;
 
-            var apiUrl = "http://localhost:7071/api/tickets";
-
-            // Build multipart/form-data
-            var formData = new MultipartFormDataContent();
-            formData.Add(new StringContent(ticket.userId ?? string.Empty), "userId");
-            formData.Add(new StringContent(ticket.employeeCode ?? string.Empty), "employeeCode");
-            formData.Add(new StringContent(ticket.role ?? string.Empty), "role");
-            if (!string.IsNullOrEmpty(ticket.rolePrefix))
-            {
-                formData.Add(new StringContent(ticket.rolePrefix), "rolePrefix");
-            }
-            formData.Add(new StringContent(ticket.title ?? string.Empty), "title");
-            formData.Add(new StringContent(ticket.description ?? string.Empty), "description");
-            formData.Add(new StringContent(ticket.category ?? string.Empty), "category");
-
-            // Attach uploaded files
+            // Collect uploaded files for the service layer
             var files = Request?.Files;
+            var attachments = new List<System.Web.HttpPostedFileBase>();
             if (files != null)
             {
                 var count = Math.Min(files.Count, 5);
@@ -129,21 +101,24 @@ namespace TicketPlatform.Controllers
                     if (file == null || file.ContentLength <= 0)
                         continue;
 
-                    var streamContent = new StreamContent(file.InputStream);
-                    streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType ?? "application/octet-stream");
-                    formData.Add(streamContent, "attachments", file.FileName);
+                    attachments.Add(file);
                 }
             }
 
-            using (var client = new HttpClient())
+            var success = false;
+            try
             {
-                var response = await client.PostAsync(apiUrl, formData);
+                success = await _ticketService.CreateTicketAsync(ticket, attachments).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                success = false;
+            }
 
-                if (!response.IsSuccessStatusCode)
-                {
-                    TempData["Error"] = "Ticket creation failed!";
-                    return RedirectToAction("Index");
-                }
+            if (!success)
+            {
+                TempData["Error"] = "Ticket creation failed!";
+                return RedirectToAction("Index");
             }
 
             TempData["Success"] = "Ticket created successfully!";
