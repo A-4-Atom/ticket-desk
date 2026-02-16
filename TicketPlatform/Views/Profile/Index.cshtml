@@ -1,0 +1,42 @@
+@model TicketPlatform.Models.ProfileViewModel
+@{
+    ViewBag.Title = "My Profile";
+}
+
+<div class="container py-4">
+    <h2 class="mb-4">My Profile</h2>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-3">
+                <div class="me-3">
+                    <img src="@Url.Content("~/Content/images/profile/@Model.UserId.jpg")" alt="Profile image" class="rounded-circle border" style="width:64px;height:64px;object-fit:cover;" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';" />
+                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width:64px;height:64px;display:none;">
+                        @((!string.IsNullOrEmpty(Model.UserName) && Model.UserName.Length > 1) ? Model.UserName.Substring(0, 2).ToUpperInvariant() : Model.UserName?.Substring(0, 1).ToUpperInvariant())
+                    </div>
+                </div>
+                <div>
+                    <h5 class="mb-1">@Model.UserName</h5>
+                    <small class="text-muted">@Model.Role</small>
+                </div>
+            </div>
+
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Name</dt>
+                <dd class="col-sm-9">@Model.UserName</dd>
+
+                <dt class="col-sm-3">Employee Code</dt>
+                <dd class="col-sm-9">@Model.EmployeeCode</dd>
+
+                <dt class="col-sm-3">Role</dt>
+                <dd class="col-sm-9">@Model.Role</dd>
+
+                <dt class="col-sm-3">Role Prefix</dt>
+                <dd class="col-sm-9">@Model.RolePrefix</dd>
+
+                <dt class="col-sm-3">User Id</dt>
+                <dd class="col-sm-9">@Model.UserId</dd>
+            </dl>
+        </div>
+    </div>
+</div>
