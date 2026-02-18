@@ -7,5 +7,7 @@ namespace TicketPlatform.Models
         public string role { get; set; }
         public string rolePrefix { get; set; }
         public string name { get; set; }
+        public string email { get; set; }
+        public string profileImageUrl { get; set; }
     }
 }

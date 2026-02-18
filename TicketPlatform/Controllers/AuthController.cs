@@ -52,6 +52,8 @@ namespace TicketPlatform.Controllers
                 Session["Role"] = user.role;
                 Session["RolePrefix"] = user.rolePrefix;
                 Session["UserName"] = user.name;
+                Session["Email"] = user.email;
+                Session["ProfileImageUrl"] = user.profileImageUrl;
 
                 return RedirectToAction("Index", "Home");
             }

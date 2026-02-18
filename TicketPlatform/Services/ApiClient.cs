@@ -47,6 +47,14 @@ namespace TicketPlatform.Services
             return _httpClient.PostAsync(url, content);
         }
 
+		public Task<HttpResponseMessage> PutJsonAsync(string relativeUrl, object payload)
+		{
+			var url = BuildUrl(relativeUrl);
+			var json = JsonConvert.SerializeObject(payload);
+			var content = new StringContent(json, Encoding.UTF8, "application/json");
+			return _httpClient.PutAsync(url, content);
+		}
+
         public Task<HttpResponseMessage> PostMultipartAsync(string relativeUrl, MultipartFormDataContent content)
         {
             var url = BuildUrl(relativeUrl);

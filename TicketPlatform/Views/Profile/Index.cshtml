@@ -4,39 +4,164 @@
 }
 
 <div class="container py-4">
-    <h2 class="mb-4">My Profile</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">My Profile</h2>
+        <button type="button" id="btnToggleEdit" class="btn btn-outline-secondary px-4">Edit Profile</button>
+    </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <div class="d-flex align-items-center mb-3">
-                <div class="me-3">
-                    <img src="@Url.Content("~/Content/images/profile/@Model.UserId.jpg")" alt="Profile image" class="rounded-circle border" style="width:64px;height:64px;object-fit:cover;" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';" />
-                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width:64px;height:64px;display:none;">
-                        @((!string.IsNullOrEmpty(Model.UserName) && Model.UserName.Length > 1) ? Model.UserName.Substring(0, 2).ToUpperInvariant() : Model.UserName?.Substring(0, 1).ToUpperInvariant())
+    <div class="card shadow-sm border-0" style="border-radius: 20px;">
+        <div class="card-body p-4">
+            @if (ViewBag.ProfileUpdateError == true)
+            {
+                <div class="alert alert-danger" role="alert">
+                    Something went wrong while updating your profile. Please try again.
+                </div>
+            }
+            <div class="row">
+                <div class="col-md-3 d-flex justify-content-center">
+                    <div class="text-center">
+                        <div class="position-relative d-inline-block">
+                            @{
+                                var backendImageUrl = Model.ProfileImageUrl;
+                                var localImageUrl = Url.Content("~/Content/images/profile/" + Model.UserId + ".jpg");
+                                var hasProfileImage = !string.IsNullOrEmpty(backendImageUrl);
+                                var imgSrc = hasProfileImage ? backendImageUrl : localImageUrl;
+                            }
+
+                            <div id="profileAvatar" class="rounded-circle d-flex align-items-center justify-content-center" style="width:120px;height:120px;overflow:hidden;">
+                                <img id="profileImage" src="@(hasProfileImage ? imgSrc : "")" alt="Profile image" class="rounded-circle border" style="width:120px;height:120px;object-fit:cover;display:@(hasProfileImage ? "block" : "none");" />
+                                <span id="profileInitials" class="bg-light text-secondary" style="width:120px;height:120px;font-size:40px;display:@(hasProfileImage ? "none" : "flex");align-items:center;justify-content:center;">
+                                    @((!string.IsNullOrEmpty(Model.UserName) && Model.UserName.Length > 1) ? Model.UserName.Substring(0, 2).ToUpperInvariant() : Model.UserName?.Substring(0, 1).ToUpperInvariant())
+                                </span>
+                            </div>
+                            <label for="ProfileImageFile" id="profileImageEdit" class="btn btn-sm btn-light border position-absolute" style="bottom:0;right:0;display:none;border-radius:999px;">
+                                Change
+                            </label>
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <h5 class="mb-1">@Model.UserName</h5>
-                    <small class="text-muted">@Model.Role</small>
+
+				<div class="col-md-9 mt-4 mt-md-0">
+                    <form id="profileForm" enctype="multipart/form-data" method="post" action="@Url.Action("Index", "Profile")">
+                        @Html.AntiForgeryToken()
+                        @Html.HiddenFor(m => m.UserId)
+
+                        <input type="file" id="ProfileImageFile" name="file" accept="image/*" class="d-none" />
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="text-uppercase small text-muted mb-1">Name</label>
+                                <div id="nameDisplay" class="h5 mb-0">@Model.UserName</div>
+                                @Html.TextBoxFor(m => m.UserName, new { @class = "form-control d-none", id = "UserNameInput" })
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label class="text-uppercase small text-muted mb-1">Email Address</label>
+                                <input type="text" class="form-control bg-light border-0" value="@Model.Email" disabled="disabled" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-uppercase small text-muted mb-1">Employee Code</label>
+                                <input type="text" class="form-control bg-light border-0" value="@Model.EmployeeCode" disabled="disabled" />
+                            </div>
+                        </div>
+
+                        <div class="row mb-2">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label class="text-uppercase small text-muted mb-1">Role</label>
+                                <input type="text" class="form-control bg-light border-0" value="@Model.Role" disabled="disabled" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-uppercase small text-muted mb-1">User Id</label>
+                                <input type="text" class="form-control bg-light border-0" value="@Model.UserId" disabled="disabled" />
+                            </div>
+                        </div>
+
+
+                        <div class="text-end mt-3" id="editActions" style="display:none;">
+                            <button type="button" id="btnCancelEdit" class="btn btn-link">Cancel</button>
+                            <button type="submit" class="btn btn-primary px-4">Save Changes</button>
+                        </div>
+                    </form>
                 </div>
             </div>
-
-            <dl class="row mb-0">
-                <dt class="col-sm-3">Name</dt>
-                <dd class="col-sm-9">@Model.UserName</dd>
-
-                <dt class="col-sm-3">Employee Code</dt>
-                <dd class="col-sm-9">@Model.EmployeeCode</dd>
-
-                <dt class="col-sm-3">Role</dt>
-                <dd class="col-sm-9">@Model.Role</dd>
-
-                <dt class="col-sm-3">Role Prefix</dt>
-                <dd class="col-sm-9">@Model.RolePrefix</dd>
-
-                <dt class="col-sm-3">User Id</dt>
-                <dd class="col-sm-9">@Model.UserId</dd>
-            </dl>
         </div>
     </div>
 </div>
+
+<script type="text/javascript">
+    (function () {
+        var isEditing = false;
+        var btnToggle = document.getElementById('btnToggleEdit');
+        var btnCancel = document.getElementById('btnCancelEdit');
+        var nameDisplay = document.getElementById('nameDisplay');
+        var nameInput = document.getElementById('UserNameInput');
+        var editActions = document.getElementById('editActions');
+        var profileImageEdit = document.getElementById('profileImageEdit');
+        var profileImageInput = document.getElementById('ProfileImageFile');
+        var profileImage = document.getElementById('profileImage');
+        var profileInitials = document.getElementById('profileInitials');
+
+        function setEditMode(edit) {
+            isEditing = edit;
+            if (!btnToggle) return;
+
+            btnToggle.textContent = edit ? 'Done' : 'Edit Profile';
+            editActions.style.display = edit ? 'block' : 'none';
+            profileImageEdit.style.display = edit ? 'inline-block' : 'none';
+
+            if (edit) {
+                nameInput.className = nameInput.className.replace('d-none', '').trim();
+                nameDisplay.style.display = 'none';
+                nameInput.value = nameDisplay.textContent || '';
+                nameInput.focus();
+            } else {
+                if (nameInput.value) {
+                    nameDisplay.textContent = nameInput.value;
+                }
+                if (nameInput.className.indexOf('d-none') === -1) {
+                    nameInput.className += ' d-none';
+                }
+                nameDisplay.style.display = 'block';
+            }
+        }
+
+        if (btnToggle) {
+            btnToggle.addEventListener('click', function () {
+                setEditMode(!isEditing);
+            });
+        }
+
+        if (btnCancel) {
+            btnCancel.addEventListener('click', function () {
+                nameInput.value = '@Model.UserName';
+                nameDisplay.textContent = '@Model.UserName';
+                if (profileImageInput) {
+                    profileImageInput.value = '';
+                }
+                setEditMode(false);
+            });
+        }
+
+        if (profileImageInput && profileImage) {
+            profileImageInput.addEventListener('change', function (e) {
+                var file = e.target.files && e.target.files[0];
+                if (!file) return;
+
+                var reader = new FileReader();
+                reader.onload = function (ev) {
+                    // hide initials fallback when a new image is selected
+                    if (profileInitials) {
+                        profileInitials.style.display = 'none';
+                    }
+                    profileImage.src = ev.target.result;
+                    profileImage.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    })();
+</script>
