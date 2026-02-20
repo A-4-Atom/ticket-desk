@@ -32,7 +32,7 @@ namespace TicketPlatform.Services
 		public async Task<string> UploadProfileImageAsync(string email, HttpPostedFileBase file)
         {
             if (file == null || file.ContentLength <= 0)
-				return string.Empty; // nothing to upload
+				return string.Empty;
 
 			var formData = new MultipartFormDataContent();
 			var streamContent = new StreamContent(file.InputStream);
@@ -46,7 +46,6 @@ namespace TicketPlatform.Services
 				return string.Empty;
 			}
 
-			// API returns the image URL (or an identifier) in the response body as plain text
 			var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 			return content ?? string.Empty;
         }
