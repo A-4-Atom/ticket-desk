@@ -58,14 +58,14 @@ namespace TicketPlatform.Controllers
 
             if (apiResult == null)
             {
-                apiResult = new TicketPageResponse
-                {
-                    page = page,
-                    pageSize = 5,
-                    tickets = new List<Ticket>(),
-                    nextPageToken = null
-                };
-            }
+				apiResult = new TicketPageResponse
+				{
+					page = page,
+					pageSize = 5,
+					tickets = new List<Ticket>(),
+					nextPageToken = null
+				};
+			}
 
             ViewBag.Page = apiResult.page;
             ViewBag.PageSize = apiResult.pageSize;
@@ -74,10 +74,70 @@ namespace TicketPlatform.Controllers
             ViewBag.HasPrevPage = page > 1;
 
             ViewBag.TicketsLoadError = loadError;
+			ViewBag.ShowSubmitAction = false;
+			ViewBag.PaginationAction = "MyTickets";
 
             return View("MyTickets", apiResult.tickets);
         }
 
+		public async Task<ActionResult> DraftTickets(int page = 1)
+		{
+			if (Session["UserId"] == null)
+				return RedirectToAction("Login", "Auth");
+
+			var userId = Session["UserId"].ToString();
+
+			var loadError = false;
+			TicketPageResponse apiResult = null;
+
+			try
+			{
+				apiResult = await _ticketService.GetDraftTicketsAsync(userId, page).ConfigureAwait(false);
+				if (apiResult == null)
+				{
+					loadError = true;
+				}
+			}
+			catch (Exception)
+			{
+				loadError = true;
+			}
+
+			if (apiResult == null)
+			{
+				apiResult = new TicketPageResponse
+				{
+					page = page,
+					pageSize = 5,
+					tickets = new List<Ticket>(),
+					nextPageToken = null
+				};
+			}
+			else
+			{
+				// Ensure we only show draft tickets, even if the backend does not filter by isDraft
+				var tickets = apiResult.tickets ?? new List<Ticket>();
+				apiResult.tickets = tickets.FindAll(t =>
+					(t != null) &&
+					(
+						t.isDraft ||
+						string.Equals(t.status, "Draft", StringComparison.OrdinalIgnoreCase)
+					));
+			}
+
+			ViewBag.Page = apiResult.page;
+			ViewBag.PageSize = apiResult.pageSize;
+
+			ViewBag.HasNextPage = !string.IsNullOrEmpty(apiResult.nextPageToken);
+			ViewBag.HasPrevPage = page > 1;
+
+			ViewBag.TicketsLoadError = loadError;
+			ViewBag.ShowSubmitAction = true;
+			ViewBag.PaginationAction = "DraftTickets";
+
+			return View("DraftTickets", apiResult.tickets);
+		}
+		
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -127,10 +187,51 @@ namespace TicketPlatform.Controllers
                 TempData["Error"] = "Ticket creation failed!";
                 return RedirectToAction("Index");
             }
-
-            TempData["Success"] = "Ticket created successfully!";
-            return RedirectToAction("Index");
+			
+			if (ticket.isDraft)
+			{
+				TempData["Success"] = "Ticket saved as draft.";
+				return RedirectToAction("DraftTickets");
+			}
+			
+			TempData["Success"] = "Ticket created successfully!";
+			return RedirectToAction("Index");
         }
+		
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<ActionResult> SubmitDraftTicket(string ticketId)
+		{
+			if (Session["UserId"] == null)
+				return RedirectToAction("Login", "Auth");
 
+			if (string.IsNullOrWhiteSpace(ticketId))
+			{
+				TempData["Error"] = "Invalid ticket identifier.";
+				return RedirectToAction("DraftTickets");
+			}
+
+			var userId = Session["UserId"].ToString();
+			var success = false;
+			try
+			{
+				success = await _ticketService.SubmitDraftTicketAsync(userId, ticketId).ConfigureAwait(false);
+			}
+			catch (Exception)
+			{
+				success = false;
+			}
+
+			if (!success)
+			{
+				TempData["Error"] = "Submitting draft ticket failed!";
+			}
+			else
+			{
+				TempData["Success"] = "Draft ticket submitted successfully!";
+			}
+
+			return RedirectToAction("DraftTickets");
+		}
     }
 }

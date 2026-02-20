@@ -205,6 +205,7 @@
     <Content Include="Views\Home\MyTickets.cshtml" />
     <Content Include="Views\Shared\_TicketTypeCard.cshtml" />
     <Content Include="Views\Profile\Index.cshtml" />
+    <Content Include="Views\Home\DraftTickets.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

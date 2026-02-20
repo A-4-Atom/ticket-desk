@@ -21,6 +21,7 @@
     <div class="nav nav-pills flex-column gap-1">
 		<a class="nav-link @((ViewContext.RouteData.Values["controller"].ToString() == "Home" && ViewContext.RouteData.Values["action"].ToString() == "Index") ? "active" : "text-dark")" href="@Url.Action("Index", "Home")">Home</a>
 		<a class="nav-link @((ViewContext.RouteData.Values["controller"].ToString() == "Home" && ViewContext.RouteData.Values["action"].ToString() == "MyTickets") ? "active" : "text-dark")" href="@Url.Action("MyTickets", "Home")">My Tickets</a>
+		<a class="nav-link @((ViewContext.RouteData.Values["controller"].ToString() == "Home" && ViewContext.RouteData.Values["action"].ToString() == "DraftTickets") ? "active" : "text-dark")" href="@Url.Action("DraftTickets", "Home")">Draft Tickets</a>
 		<a class="nav-link @(ViewContext.RouteData.Values["controller"].ToString() == "Profile" ? "active" : "text-dark")" href="@Url.Action("Index", "Profile")">My Profile</a>
     </div>
 
