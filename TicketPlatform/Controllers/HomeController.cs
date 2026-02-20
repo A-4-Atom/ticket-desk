@@ -115,7 +115,6 @@ namespace TicketPlatform.Controllers
 			}
 			else
 			{
-				// Ensure we only show draft tickets, even if the backend does not filter by isDraft
 				var tickets = apiResult.tickets ?? new List<Ticket>();
 				apiResult.tickets = tickets.FindAll(t =>
 					(t != null) &&
@@ -146,7 +145,6 @@ namespace TicketPlatform.Controllers
             if (Session["UserId"] == null)
                 return RedirectToAction("Login", "Auth");
 
-            // Get role from session and resolve role prefix via helper
             var roleString = (Session["Role"] ?? "User").ToString();
             var userRole = RolePrefixHelper.ParseRole(roleString);
             var rolePrefix = RolePrefixHelper.GetPrefix(userRole);
@@ -156,7 +154,6 @@ namespace TicketPlatform.Controllers
             ticket.role = roleString;
             ticket.rolePrefix = rolePrefix;
 
-            // Collect uploaded files for the service layer
             var files = Request?.Files;
             var attachments = new List<System.Web.HttpPostedFileBase>();
             if (files != null)

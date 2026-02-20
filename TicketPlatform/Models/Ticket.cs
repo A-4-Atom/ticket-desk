@@ -27,7 +27,6 @@ namespace TicketPlatform.Models
         public string createdAt { get; set; }
         public string confirmationNumber { get; set; }
 
-		// Indicates whether this ticket is currently a draft
 		public bool isDraft { get; set; }
 
 		public List<TicketAttachment> attachments { get; set; }

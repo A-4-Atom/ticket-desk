@@ -16,7 +16,6 @@ namespace TicketPlatform.Controllers
 		{
 		}
 
-		// This constructor is useful for unit testing with a mocked IProfileService
 		public ProfileController(IProfileService profileService)
 		{
 			_profileService = profileService;
@@ -58,7 +57,6 @@ namespace TicketPlatform.Controllers
 
 			try
 			{
-				// Update display name if it changed
 				if (!string.IsNullOrWhiteSpace(model.UserName) &&
 					!string.Equals(model.UserName, originalName, StringComparison.Ordinal))
 				{
@@ -76,7 +74,6 @@ namespace TicketPlatform.Controllers
 					}
 				}
 
-				// Upload profile image if any file provided - field name must match backend expectation
 				var file = Request?.Files?["file"] as HttpPostedFileBase;
 				if (file != null && file.ContentLength > 0)
 				{
@@ -90,7 +87,7 @@ namespace TicketPlatform.Controllers
 					}
 					else
 					{
-						// keep latest profile image url in session so it is available after redirect
+						// Todo: Fix profile image bug.
 						Session["ProfileImageUrl"] = imageUrl;
 					}
 				}
@@ -100,7 +97,6 @@ namespace TicketPlatform.Controllers
 				hasError = true;
 			}
 
-			// Rebuild the model from session to ensure consistency
 			var viewModel = new ProfileViewModel
 			{
 				UserId = (Session["UserId"] ?? string.Empty).ToString(),

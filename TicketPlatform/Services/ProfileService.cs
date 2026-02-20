@@ -37,7 +37,6 @@ namespace TicketPlatform.Services
 			var formData = new MultipartFormDataContent();
 			var streamContent = new StreamContent(file.InputStream);
 			streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType ?? "image/jpeg");
-			// Use a simple field name so the Azure Function's MultipartReader can consume it
 			formData.Add(streamContent, "file", file.FileName);
 
 			var relativeUrl = $"/api/users/{email}/upload-profile";
