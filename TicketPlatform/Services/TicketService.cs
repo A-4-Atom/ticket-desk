@@ -20,9 +20,9 @@ namespace TicketPlatform.Services
             _apiClient = apiClient;
         }
 
-        public async Task<TicketPageResponse> GetTicketsAsync(string userId, int page)
+		public async Task<TicketPageResponse> GetTicketsAsync(string userId, string role, int page)
         {
-            var relativeUrl = $"/api/tickets?userId={userId}&page={page}";
+			var relativeUrl = $"/api/tickets?userId={userId}&role={role}&page={page}";
             var response = await _apiClient.GetAsync(relativeUrl).ConfigureAwait(false);
 
             if (!response.IsSuccessStatusCode)
@@ -68,9 +68,9 @@ namespace TicketPlatform.Services
             return response.IsSuccessStatusCode;
         }
 
-		public async Task<TicketPageResponse> GetDraftTicketsAsync(string userId, int page)
+		public async Task<TicketPageResponse> GetDraftTicketsAsync(string userId, string role, int page)
 		{
-			var relativeUrl = $"/api/tickets?userId={userId}&page={page}&isDraft=true";
+			var relativeUrl = $"/api/tickets?userId={userId}&role={role}&page={page}&isDraft=true";
 			var response = await _apiClient.GetAsync(relativeUrl).ConfigureAwait(false);
 
 			if (!response.IsSuccessStatusCode)
@@ -87,6 +87,30 @@ namespace TicketPlatform.Services
 		{
 			var relativeUrl = $"/api/tickets/{userId}/{ticketId}/submit";
 			var response = await _apiClient.PostJsonAsync(relativeUrl, new { }).ConfigureAwait(false);
+			return response.IsSuccessStatusCode;
+		}
+
+		public async Task<bool> BulkCloseTicketsAsync(IEnumerable<string> ticketIds, string role)
+		{
+			if (ticketIds == null)
+			{
+				return false;
+			}
+
+			var idsList = new List<string>(ticketIds);
+			if (idsList.Count == 0)
+			{
+				return false;
+			}
+
+			var payload = new
+			{
+					ticketIds = idsList,
+					action = "Close"
+			};
+
+			var relativeUrl = $"/api/tickets/bulk-update?role={role}";
+			var response = await _apiClient.PatchJsonAsync(relativeUrl, payload).ConfigureAwait(false);
 			return response.IsSuccessStatusCode;
 		}
     }

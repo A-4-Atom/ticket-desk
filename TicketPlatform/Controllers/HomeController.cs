@@ -38,13 +38,14 @@ namespace TicketPlatform.Controllers
                 return RedirectToAction("Login", "Auth");
 
             var userId = Session["UserId"].ToString();
+			var role = (Session["Role"] ?? "User").ToString();
 
             var loadError = false;
             TicketPageResponse apiResult = null;
 
             try
             {
-                apiResult = await _ticketService.GetTicketsAsync(userId, page).ConfigureAwait(false);
+				apiResult = await _ticketService.GetTicketsAsync(userId, role, page).ConfigureAwait(false);
                 if (apiResult == null)
                 {
                     loadError = true;
@@ -64,6 +65,14 @@ namespace TicketPlatform.Controllers
 					tickets = new List<Ticket>(),
 					nextPageToken = null
 				};
+			}
+			else
+			{
+				var tickets = apiResult.tickets ?? new List<Ticket>();
+				apiResult.tickets = tickets.FindAll(t =>
+					(t != null) &&
+					!t.isDraft &&
+					!string.Equals(t.status, "Draft", StringComparison.OrdinalIgnoreCase));
 			}
 
             ViewBag.Page = apiResult.page;
@@ -85,13 +94,14 @@ namespace TicketPlatform.Controllers
 				return RedirectToAction("Login", "Auth");
 
 			var userId = Session["UserId"].ToString();
+			var role = (Session["Role"] ?? "User").ToString();
 
 			var loadError = false;
 			TicketPageResponse apiResult = null;
 
 			try
 			{
-				apiResult = await _ticketService.GetDraftTicketsAsync(userId, page).ConfigureAwait(false);
+				apiResult = await _ticketService.GetDraftTicketsAsync(userId, role, page).ConfigureAwait(false);
 				if (apiResult == null)
 				{
 					loadError = true;
@@ -228,6 +238,41 @@ namespace TicketPlatform.Controllers
 			}
 
 			return RedirectToAction("DraftTickets");
+		}
+
+		[HttpPost]
+		public async Task<ActionResult> BulkCloseTickets(List<string> ticketIds)
+		{
+			if (Session["UserId"] == null)
+				return new HttpStatusCodeResult(401);
+
+			var role = (Session["Role"] ?? "User").ToString();
+			if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+			{
+				return new HttpStatusCodeResult(403);
+			}
+
+			if (ticketIds == null || ticketIds.Count == 0)
+			{
+				return Json(new { success = false, message = "No tickets selected." });
+			}
+
+			var success = false;
+			try
+			{
+				success = await _ticketService.BulkCloseTicketsAsync(ticketIds, role).ConfigureAwait(false);
+			}
+			catch (Exception)
+			{
+				success = false;
+			}
+
+			if (!success)
+			{
+				return Json(new { success = false, message = "Failed to close selected tickets." });
+			}
+
+			return Json(new { success = true, message = "Selected tickets closed successfully." });
 		}
     }
 }
