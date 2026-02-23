@@ -12,6 +12,7 @@
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="ticketTypeKey" id="ticketTypeKey" />
                     <input type="hidden" name="category" id="ticketCategory" />
+                    <input type="hidden" name="requestType" id="requestType" />
                     <input type="hidden" name="isDraft" id="isDraft" value="false" />
 
                     <div class="alert alert-light border d-none mb-3" id="requesterInfo">
@@ -52,7 +53,7 @@
                         <div id="newEmployeeFields" class="d-none">
                             <div class="mb-3">
                                 <label class="form-label text-uppercase small fw-bold text-muted">New Hire Name</label>
-                                <input name="newHireName" type="text" class="form-control form-control-lg" />
+                                <input name="newEmployeeName" type="text" class="form-control form-control-lg" />
                             </div>
                             <div class="mb-3">
                                 <label class="form-label text-uppercase small fw-bold text-muted">Start Date</label>
@@ -67,7 +68,7 @@
                         <div id="employeeSeparationFields" class="d-none">
                             <div class="mb-3">
                                 <label class="form-label text-uppercase small fw-bold text-muted">Employee Name</label>
-                                <input name="employeeName" type="text" class="form-control form-control-lg" />
+                                <input name="separationEmployeeName" type="text" class="form-control form-control-lg" />
                             </div>
                             <div class="mb-3">
                                 <label class="form-label text-uppercase small fw-bold text-muted">Last Working Day</label>
@@ -78,7 +79,7 @@
                         <div id="assetOrderFields" class="d-none">
                             <div class="mb-3">
                                 <label class="form-label text-uppercase small fw-bold text-muted">Item Name</label>
-                                <input name="itemName" type="text" class="form-control form-control-lg" />
+                                <input name="assetItemName" type="text" class="form-control form-control-lg" />
                             </div>
                             <div class="mb-3">
                                 <label class="form-label text-uppercase small fw-bold text-muted">Quantity</label>
@@ -88,7 +89,7 @@
 
                         <div class="mb-3">
                             <label class="form-label text-uppercase small fw-bold text-muted">Description</label>
-                            <textarea name="description" class="form-control" rows="4"></textarea>
+                           <textarea name="description" id="adminDescription" class="form-control" rows="4"></textarea>
                         </div>
                     </div>
 
@@ -177,10 +178,12 @@
             }
 
             var titleInput = form.querySelector('input[name="title"]');
-            var descriptionInput = form.querySelector('textarea[name="description"]');
+            var descriptionInput = document.getElementById('description');
+            var adminDescriptionInput = document.getElementById('adminDescription');
             var ticketTypeKeyInput = document.getElementById('ticketTypeKey');
             var categoryHiddenInput = document.getElementById('ticketCategory');
             var categoryVisibleInput = document.getElementById('categoryInput');
+            var requestTypeInput = document.getElementById('requestType');
 
             var title = titleInput ? titleInput.value : '';
             var category = '';
@@ -189,7 +192,18 @@
             } else if (categoryHiddenInput && categoryHiddenInput.value) {
                 category = categoryHiddenInput.value;
             }
-            var description = descriptionInput ? descriptionInput.value : '';
+
+            var isAdminType = ticketTypeKeyInput && (
+                ticketTypeKeyInput.value === 'new-employee' ||
+                ticketTypeKeyInput.value === 'employee-separation' ||
+                ticketTypeKeyInput.value === 'asset-order');
+
+            var description = '';
+            if (isAdminType && adminDescriptionInput) {
+                description = adminDescriptionInput.value;
+            } else if (descriptionInput) {
+                description = descriptionInput.value;
+            }
 
             var formData = new FormData();
 
@@ -213,9 +227,47 @@
                 formData.append('ticketTypeKey', ticketTypeKeyInput.value || 'it-support');
             }
 
+            // pass request type through so the controller/model binder can set it directly
+            if (requestTypeInput && requestTypeInput.value) {
+                formData.append('requestType', requestTypeInput.value);
+            }
+
             var isConfidentialCheckbox = document.getElementById('isConfidential');
             if (isConfidentialCheckbox && isConfidentialCheckbox.checked) {
                 formData.append('isConfidential', 'true');
+            }
+
+            // admin-only fields for operational requests
+            if (isAdminType) {
+                var newEmployeeNameInput = form.querySelector('input[name="newEmployeeName"]');
+                var startDateInput = form.querySelector('input[name="startDate"]');
+                var positionInput = form.querySelector('input[name="position"]');
+                var separationEmployeeNameInput = form.querySelector('input[name="separationEmployeeName"]');
+                var lastWorkingDayInput = form.querySelector('input[name="lastWorkingDay"]');
+                var assetItemNameInput = form.querySelector('input[name="assetItemName"]');
+                var quantityInput = form.querySelector('input[name="quantity"]');
+
+                if (newEmployeeNameInput && newEmployeeNameInput.value) {
+                    formData.append('newEmployeeName', newEmployeeNameInput.value);
+                }
+                if (startDateInput && startDateInput.value) {
+                    formData.append('startDate', startDateInput.value);
+                }
+                if (positionInput && positionInput.value) {
+                    formData.append('position', positionInput.value);
+                }
+                if (separationEmployeeNameInput && separationEmployeeNameInput.value) {
+                    formData.append('separationEmployeeName', separationEmployeeNameInput.value);
+                }
+                if (lastWorkingDayInput && lastWorkingDayInput.value) {
+                    formData.append('lastWorkingDay', lastWorkingDayInput.value);
+                }
+                if (assetItemNameInput && assetItemNameInput.value) {
+                    formData.append('assetItemName', assetItemNameInput.value);
+                }
+                if (quantityInput && quantityInput.value) {
+                    formData.append('quantity', quantityInput.value);
+                }
             }
 
             // Attach files

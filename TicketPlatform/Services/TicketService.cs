@@ -50,6 +50,39 @@ namespace TicketPlatform.Services
             formData.Add(new StringContent(ticket.description ?? string.Empty), "description");
             formData.Add(new StringContent(ticket.category ?? string.Empty), "category");
 			formData.Add(new StringContent(ticket.isDraft ? "true" : "false"), "isDraft");
+			if (!string.IsNullOrEmpty(ticket.requestType))
+			{
+				formData.Add(new StringContent(ticket.requestType), "requestType");
+			}
+			formData.Add(new StringContent(ticket.isConfidential ? "true" : "false"), "isConfidential");
+			if (!string.IsNullOrEmpty(ticket.newEmployeeName))
+			{
+				formData.Add(new StringContent(ticket.newEmployeeName), "newEmployeeName");
+			}
+			if (!string.IsNullOrEmpty(ticket.startDate))
+			{
+				formData.Add(new StringContent(ticket.startDate), "startDate");
+			}
+			if (!string.IsNullOrEmpty(ticket.position))
+			{
+				formData.Add(new StringContent(ticket.position), "position");
+			}
+			if (!string.IsNullOrEmpty(ticket.separationEmployeeName))
+			{
+				formData.Add(new StringContent(ticket.separationEmployeeName), "separationEmployeeName");
+			}
+			if (!string.IsNullOrEmpty(ticket.lastWorkingDay))
+			{
+				formData.Add(new StringContent(ticket.lastWorkingDay), "lastWorkingDay");
+			}
+			if (!string.IsNullOrEmpty(ticket.assetItemName))
+			{
+				formData.Add(new StringContent(ticket.assetItemName), "assetItemName");
+			}
+			if (!string.IsNullOrEmpty(ticket.quantity))
+			{
+				formData.Add(new StringContent(ticket.quantity), "quantity");
+			}
 
             if (attachments != null)
             {

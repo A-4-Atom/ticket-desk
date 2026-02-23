@@ -154,9 +154,18 @@ namespace TicketPlatform.Controllers
             if (Session["UserId"] == null)
                 return RedirectToAction("Login", "Auth");
 
-            var roleString = (Session["Role"] ?? "User").ToString();
-            var userRole = RolePrefixHelper.ParseRole(roleString);
-            var rolePrefix = RolePrefixHelper.GetPrefix(userRole);
+			var roleString = (Session["Role"] ?? "User").ToString();
+			roleString = roleString?.Trim();
+			if (string.Equals(roleString, "admin", StringComparison.OrdinalIgnoreCase))
+			{
+				roleString = "Admin";
+			}
+			var rolePrefix = (Session["RolePrefix"] ?? string.Empty).ToString();
+			if (string.IsNullOrWhiteSpace(rolePrefix))
+			{
+				var userRole = RolePrefixHelper.ParseRole(roleString);
+				rolePrefix = RolePrefixHelper.GetPrefix(userRole) ?? string.Empty;
+			}
 
             ticket.userId = Session["UserId"].ToString();
             ticket.employeeCode = (Session["EmployeeCode"] ?? "001").ToString();
