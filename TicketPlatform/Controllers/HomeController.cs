@@ -19,7 +19,6 @@ namespace TicketPlatform.Controllers
         {
         }
 
-        // This constructor is useful for unit testing with a mocked ITicketService
         public HomeController(ITicketService ticketService)
         {
             _ticketService = ticketService;

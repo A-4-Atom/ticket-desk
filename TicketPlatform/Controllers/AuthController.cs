@@ -20,7 +20,6 @@ namespace TicketPlatform.Controllers
         {
         }
 
-        // This constructor is useful for unit testing with a mocked IAuthService
         public AuthController(IAuthService authService)
         {
             _authService = authService;
