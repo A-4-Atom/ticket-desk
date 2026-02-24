@@ -43,5 +43,149 @@
 
 	@Scripts.Render("~/bundles/jquery")
 	@Scripts.Render("~/bundles/bootstrap")
+
+	<script>
+		(function () {
+			var cards = document.querySelectorAll('.ticket-type-card');
+			var modalEl = document.getElementById('createTicketModal');
+			if (!cards || !modalEl) return;
+
+			var ticketTypeKeyInput = document.getElementById('ticketTypeKey');
+			var ticketCategoryInput = document.getElementById('ticketCategory');
+			var categoryVisibleInput = document.getElementById('categoryInput');
+			var requesterInfo = document.getElementById('requesterInfo');
+			var normalFields = document.getElementById('normalTicketFields');
+			var adminFields = document.getElementById('adminTicketFields');
+			var newEmp = document.getElementById('newEmployeeFields');
+			var sep = document.getElementById('employeeSeparationFields');
+			var asset = document.getElementById('assetOrderFields');
+			var confidentialityWrapper = document.getElementById('confidentialityWrapper');
+			var isConfidentialCheckbox = document.getElementById('isConfidential');
+			var titleInput = document.getElementById('title');
+			var descriptionInput = document.getElementById('description');
+			var adminDescriptionInput = document.getElementById('adminDescription');
+				var requestTypeInput = document.getElementById('requestType');
+			var quickRequestButtons = document.querySelectorAll('#mobileQuickRequestButton, #desktopQuickRequestButton');
+
+			function resetAdminSections() {
+				if (newEmp) newEmp.classList.add('d-none');
+				if (sep) sep.classList.add('d-none');
+				if (asset) asset.classList.add('d-none');
+			}
+
+			function handleCardClick(card) {
+				var key = card.getAttribute('data-ticket-key') || 'it-support';
+				var category = card.getAttribute('data-ticket-category') || '';
+				var requiresConf = card.getAttribute('data-requires-confidentiality') === 'true';
+
+				if (ticketTypeKeyInput) ticketTypeKeyInput.value = key;
+				if (ticketCategoryInput) ticketCategoryInput.value = category;
+				if (categoryVisibleInput) categoryVisibleInput.value = category;
+					if (requestTypeInput) {
+						var requestType = 'General';
+						if (key === 'new-employee') requestType = 'EmployeeCreation';
+						else if (key === 'employee-separation') requestType = 'EmployeeSeparation';
+						else if (key === 'asset-order') requestType = 'AssetOrder';
+						requestTypeInput.value = requestType;
+					}
+
+				if (titleInput) {
+					if (key === 'it-support') titleInput.value = 'IT support request';
+					else if (key === 'hr-support') titleInput.value = 'HR support request';
+					else if (key === 'general-service') titleInput.value = 'General service request';
+					else if (key === 'new-employee') titleInput.value = 'New employee onboarding';
+					else if (key === 'employee-separation') titleInput.value = 'Employee separation';
+					else if (key === 'asset-order') titleInput.value = 'Asset order';
+				}
+
+				if (descriptionInput) {
+					descriptionInput.value = '';
+				}
+
+				if (confidentialityWrapper) {
+					confidentialityWrapper.classList.toggle('d-none', !requiresConf);
+				}
+				if (isConfidentialCheckbox) {
+					isConfidentialCheckbox.checked = false;
+				}
+
+				var isAdminType = key === 'new-employee' || key === 'employee-separation' || key === 'asset-order';
+				if (normalFields) normalFields.classList.toggle('d-none', isAdminType);
+				if (adminFields) adminFields.classList.toggle('d-none', !isAdminType);
+				if (requesterInfo) requesterInfo.classList.toggle('d-none', !isAdminType);
+
+				// Toggle required attributes so hidden description fields do not block form submission
+				if (descriptionInput) {
+					descriptionInput.required = !isAdminType;
+				}
+				if (adminDescriptionInput) {
+					adminDescriptionInput.required = isAdminType;
+				}
+
+				resetAdminSections();
+				if (isAdminType) {
+					if (key === 'new-employee' && newEmp) newEmp.classList.remove('d-none');
+					if (key === 'employee-separation' && sep) sep.classList.remove('d-none');
+					if (key === 'asset-order' && asset) asset.classList.remove('d-none');
+				}
+
+				var modal = window.bootstrap && window.bootstrap.Modal.getOrCreateInstance(modalEl);
+				if (modal) modal.show();
+			}
+
+			function openGeneralServiceQuickRequest() {
+				// Force General Service for quick request
+				var key = 'general-service';
+				var category = 'General Service';
+
+				if (ticketTypeKeyInput) ticketTypeKeyInput.value = key;
+				if (ticketCategoryInput) ticketCategoryInput.value = category;
+				var categoryVisibleInput = document.getElementById('categoryInput');
+				if (categoryVisibleInput) categoryVisibleInput.value = category;
+					if (requestTypeInput) requestTypeInput.value = 'General';
+
+				if (titleInput) {
+					titleInput.value = 'General service request';
+				}
+
+				if (descriptionInput) {
+					descriptionInput.value = '';
+				}
+
+				if (confidentialityWrapper) {
+					confidentialityWrapper.classList.add('d-none');
+				}
+				if (isConfidentialCheckbox) {
+					isConfidentialCheckbox.checked = false;
+				}
+
+				if (normalFields) normalFields.classList.remove('d-none');
+				if (adminFields) adminFields.classList.add('d-none');
+				if (requesterInfo) requesterInfo.classList.add('d-none');
+				if (descriptionInput) {
+					descriptionInput.required = true;
+				}
+				if (adminDescriptionInput) {
+					adminDescriptionInput.required = false;
+				}
+				resetAdminSections();
+
+				var modal = window.bootstrap && window.bootstrap.Modal.getOrCreateInstance(modalEl);
+				if (modal) modal.show();
+			}
+
+			Array.prototype.forEach.call(cards, function (card) {
+				card.addEventListener('click', function () {
+					handleCardClick(card);
+				});
+			});
+
+			Array.prototype.forEach.call(quickRequestButtons, function (btn) {
+				btn.addEventListener('click', function () {
+					openGeneralServiceQuickRequest();
+				});
+			});
+		})();
+	</script>
 </body>
 </html>

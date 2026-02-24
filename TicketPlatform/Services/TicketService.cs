@@ -1,0 +1,150 @@
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using TicketPlatform.Models;
+
+namespace TicketPlatform.Services
+{
+    public class TicketService : ITicketService
+    {
+        private readonly IApiClient _apiClient;
+
+        public TicketService() : this(new ApiClient())
+        {
+        }
+
+        public TicketService(IApiClient apiClient)
+        {
+            _apiClient = apiClient;
+        }
+
+		public async Task<TicketPageResponse> GetTicketsAsync(string userId, string role, int page)
+        {
+			var relativeUrl = $"/api/tickets?userId={userId}&role={role}&page={page}";
+            var response = await _apiClient.GetAsync(relativeUrl).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var apiResult = JsonConvert.DeserializeObject<TicketPageResponse>(json);
+            return apiResult;
+        }
+
+        public async Task<bool> CreateTicketAsync(Ticket ticket, IEnumerable<System.Web.HttpPostedFileBase> attachments)
+        {
+            var formData = new MultipartFormDataContent();
+
+            formData.Add(new StringContent(ticket.userId ?? string.Empty), "userId");
+            formData.Add(new StringContent(ticket.employeeCode ?? string.Empty), "employeeCode");
+            formData.Add(new StringContent(ticket.role ?? string.Empty), "role");
+            if (!string.IsNullOrEmpty(ticket.rolePrefix))
+            {
+                formData.Add(new StringContent(ticket.rolePrefix), "rolePrefix");
+            }
+            formData.Add(new StringContent(ticket.title ?? string.Empty), "title");
+            formData.Add(new StringContent(ticket.description ?? string.Empty), "description");
+            formData.Add(new StringContent(ticket.category ?? string.Empty), "category");
+			formData.Add(new StringContent(ticket.isDraft ? "true" : "false"), "isDraft");
+			if (!string.IsNullOrEmpty(ticket.requestType))
+			{
+				formData.Add(new StringContent(ticket.requestType), "requestType");
+			}
+			formData.Add(new StringContent(ticket.isConfidential ? "true" : "false"), "isConfidential");
+			if (!string.IsNullOrEmpty(ticket.newEmployeeName))
+			{
+				formData.Add(new StringContent(ticket.newEmployeeName), "newEmployeeName");
+			}
+			if (!string.IsNullOrEmpty(ticket.startDate))
+			{
+				formData.Add(new StringContent(ticket.startDate), "startDate");
+			}
+			if (!string.IsNullOrEmpty(ticket.position))
+			{
+				formData.Add(new StringContent(ticket.position), "position");
+			}
+			if (!string.IsNullOrEmpty(ticket.separationEmployeeName))
+			{
+				formData.Add(new StringContent(ticket.separationEmployeeName), "separationEmployeeName");
+			}
+			if (!string.IsNullOrEmpty(ticket.lastWorkingDay))
+			{
+				formData.Add(new StringContent(ticket.lastWorkingDay), "lastWorkingDay");
+			}
+			if (!string.IsNullOrEmpty(ticket.assetItemName))
+			{
+				formData.Add(new StringContent(ticket.assetItemName), "assetItemName");
+			}
+			if (!string.IsNullOrEmpty(ticket.quantity))
+			{
+				formData.Add(new StringContent(ticket.quantity), "quantity");
+			}
+
+            if (attachments != null)
+            {
+                foreach (var file in attachments)
+                {
+                    if (file == null || file.ContentLength <= 0)
+                        continue;
+
+                    var streamContent = new StreamContent(file.InputStream);
+                    streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType ?? "application/octet-stream");
+                    formData.Add(streamContent, "attachments", file.FileName);
+                }
+            }
+
+            var response = await _apiClient.PostMultipartAsync("/api/tickets", formData).ConfigureAwait(false);
+            return response.IsSuccessStatusCode;
+        }
+
+		public async Task<TicketPageResponse> GetDraftTicketsAsync(string userId, string role, int page)
+		{
+			var relativeUrl = $"/api/tickets?userId={userId}&role={role}&page={page}&isDraft=true";
+			var response = await _apiClient.GetAsync(relativeUrl).ConfigureAwait(false);
+
+			if (!response.IsSuccessStatusCode)
+			{
+				return null;
+			}
+
+			var json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+			var apiResult = JsonConvert.DeserializeObject<TicketPageResponse>(json);
+			return apiResult;
+		}
+
+		public async Task<bool> SubmitDraftTicketAsync(string userId, string ticketId)
+		{
+			var relativeUrl = $"/api/tickets/{userId}/{ticketId}/submit";
+			var response = await _apiClient.PostJsonAsync(relativeUrl, new { }).ConfigureAwait(false);
+			return response.IsSuccessStatusCode;
+		}
+
+		public async Task<bool> BulkCloseTicketsAsync(IEnumerable<string> ticketIds, string role)
+		{
+			if (ticketIds == null)
+			{
+				return false;
+			}
+
+			var idsList = new List<string>(ticketIds);
+			if (idsList.Count == 0)
+			{
+				return false;
+			}
+
+			var payload = new
+			{
+					ticketIds = idsList,
+					action = "Close"
+			};
+
+			var relativeUrl = $"/api/tickets/bulk-update?role={role}";
+			var response = await _apiClient.PatchJsonAsync(relativeUrl, payload).ConfigureAwait(false);
+			return response.IsSuccessStatusCode;
+		}
+    }
+}

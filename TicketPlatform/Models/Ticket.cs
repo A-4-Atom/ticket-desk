@@ -27,6 +27,19 @@ namespace TicketPlatform.Models
         public string createdAt { get; set; }
         public string confirmationNumber { get; set; }
 
-        public List<TicketAttachment> attachments { get; set; }
+		public bool isDraft { get; set; }
+
+		public bool isConfidential { get; set; }
+		public string requestType { get; set; }
+
+		public string newEmployeeName { get; set; }
+		public string startDate { get; set; }
+		public string position { get; set; }
+		public string separationEmployeeName { get; set; }
+		public string lastWorkingDay { get; set; }
+		public string assetItemName { get; set; }
+		public string quantity { get; set; }
+
+		public List<TicketAttachment> attachments { get; set; }
     }
 }

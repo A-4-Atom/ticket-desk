@@ -122,12 +122,25 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\AuthController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\ProfileController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\LoginResponse.cs" />
+    <Compile Include="Models\ProfileViewModel.cs" />
+    <Compile Include="Models\RolePrefix.cs" />
     <Compile Include="Models\TicketPageResponse.cs" />
     <Compile Include="Models\Ticket.cs" />
+    <Compile Include="Models\TicketTypeViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\ApiClient.cs" />
+    <Compile Include="Services\AuthService.cs" />
+    <Compile Include="Services\IApiClient.cs" />
+    <Compile Include="Services\IAuthService.cs" />
+    <Compile Include="Services\IProfileService.cs" />
+    <Compile Include="Services\ITicketService.cs" />
+    <Compile Include="Services\ProfileService.cs" />
+    <Compile Include="Services\TicketService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitignore" />
@@ -189,6 +202,10 @@
     <Content Include="Views\Shared\_MobileTopBar.cshtml" />
     <Content Include="Views\Home\_CreateTicketModal.cshtml" />
     <Content Include="Views\Home\_TicketsTable.cshtml" />
+    <Content Include="Views\Home\MyTickets.cshtml" />
+    <Content Include="Views\Shared\_TicketTypeCard.cshtml" />
+    <Content Include="Views\Profile\Index.cshtml" />
+    <Content Include="Views\Home\DraftTickets.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -7,24 +7,90 @@
             </div>
 
             <div class="modal-body px-4 pb-4">
-                <form id="createTicketForm">
+                @using (Html.BeginForm("CreateTicket", "Home", FormMethod.Post, new { id = "createTicketForm", enctype = "multipart/form-data" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ticketTypeKey" id="ticketTypeKey" />
+                    <input type="hidden" name="category" id="ticketCategory" />
+                    <input type="hidden" name="requestType" id="requestType" />
+                    <input type="hidden" name="isDraft" id="isDraft" value="false" />
+
+                    <div class="alert alert-light border d-none mb-3" id="requesterInfo">
+                        <div class="d-flex justify-content-between small">
+                            <div><strong>Requester:</strong> @Session["UserName"]</div>
+                            <div><strong>Employee Code:</strong> @Session["EmployeeCode"]</div>
+                        </div>
+                    </div>
                     <div id="createTicketError" class="alert alert-danger d-none" role="alert"></div>
-                    <div class="mb-3">
-                        <label class="form-label text-uppercase small fw-bold text-muted">Title</label>
-                        <input name="title" type="text" class="form-control form-control-lg"
-                               placeholder="Brief summary of the issue" required />
+                    <div id="normalTicketFields">
+                        <div class="mb-3">
+                            <label class="form-label text-uppercase small fw-bold text-muted">Title</label>
+                            <input name="title" id="title" type="text" class="form-control form-control-lg"
+                                   placeholder="Brief summary of the issue" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-uppercase small fw-bold text-muted">Category</label>
+                            <input name="category" id="categoryInput" type="text" class="form-control form-control-lg"
+                                   placeholder="IT Support, HR Support, General Service..." required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-uppercase small fw-bold text-muted">Description</label>
+                            <textarea name="description" id="description" class="form-control" rows="4"
+                                      placeholder="Detailed explanation..." required></textarea>
+                        </div>
+
+                        <div class="form-check mb-3 d-none" id="confidentialityWrapper">
+                            <input class="form-check-input" type="checkbox" value="true" id="isConfidential" name="isConfidential">
+                            <label class="form-check-label small" for="isConfidential">
+                                Mark as confidential (HR will restrict visibility)
+                            </label>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label text-uppercase small fw-bold text-muted">Category</label>
-                        <input name="category" type="text" class="form-control form-control-lg"
-                               placeholder="Technical, Account, Feature Request..." required />
-                    </div>
+                    <div id="adminTicketFields" class="d-none">
+                        <div id="newEmployeeFields" class="d-none">
+                            <div class="mb-3">
+                                <label class="form-label text-uppercase small fw-bold text-muted">New Hire Name</label>
+                                <input name="newEmployeeName" type="text" class="form-control form-control-lg" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-uppercase small fw-bold text-muted">Start Date</label>
+                                <input name="startDate" type="date" class="form-control form-control-lg" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-uppercase small fw-bold text-muted">Position / Role</label>
+                                <input name="position" type="text" class="form-control form-control-lg" />
+                            </div>
+                        </div>
 
-                    <div class="mb-3">
-                        <label class="form-label text-uppercase small fw-bold text-muted">Description</label>
-                        <textarea name="description" class="form-control" rows="4"
-                                  placeholder="Detailed explanation..." required></textarea>
+                        <div id="employeeSeparationFields" class="d-none">
+                            <div class="mb-3">
+                                <label class="form-label text-uppercase small fw-bold text-muted">Employee Name</label>
+                                <input name="separationEmployeeName" type="text" class="form-control form-control-lg" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-uppercase small fw-bold text-muted">Last Working Day</label>
+                                <input name="lastWorkingDay" type="date" class="form-control form-control-lg" />
+                            </div>
+                        </div>
+
+                        <div id="assetOrderFields" class="d-none">
+                            <div class="mb-3">
+                                <label class="form-label text-uppercase small fw-bold text-muted">Item Name</label>
+                                <input name="assetItemName" type="text" class="form-control form-control-lg" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-uppercase small fw-bold text-muted">Quantity</label>
+                                <input name="quantity" type="number" min="1" class="form-control form-control-lg" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-uppercase small fw-bold text-muted">Description</label>
+                           <textarea name="description" id="adminDescription" class="form-control" rows="4"></textarea>
+                        </div>
                     </div>
 
                     <div class="mb-4">
@@ -42,11 +108,14 @@
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
                             Cancel
                         </button>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-outline-secondary" id="saveAsDraftButton">
+                            Save as Draft
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="submitTicketButton">
                             Create Ticket
                         </button>
                     </div>
-                </form>
+                }
             </div>
         </div>
     </div>
@@ -60,6 +129,8 @@
         var filesInput = document.getElementById('attachments');
         var countSpan = document.getElementById('attachmentCount');
         var errorBox = document.getElementById('createTicketError');
+        var tokenInput = form.querySelector('input[name="__RequestVerificationToken"]');
+        var isDraftInput = document.getElementById('isDraft');
 
         if (filesInput && countSpan) {
             filesInput.addEventListener('change', function () {
@@ -82,6 +153,22 @@
             });
         }
 
+        var isDraftMode = false;
+        var saveDraftButton = document.getElementById('saveAsDraftButton');
+        var submitTicketButton = document.getElementById('submitTicketButton');
+
+        if (saveDraftButton) {
+            saveDraftButton.addEventListener('click', function () {
+                isDraftMode = true;
+            });
+        }
+
+        if (submitTicketButton) {
+            submitTicketButton.addEventListener('click', function () {
+                isDraftMode = false;
+            });
+        }
+
         form.addEventListener('submit', function (e) {
             e.preventDefault();
 
@@ -90,16 +177,98 @@
                 errorBox.textContent = '';
             }
 
-            var title = form.querySelector('input[name="title"]').value;
-            var category = form.querySelector('input[name="category"]').value;
-            var description = form.querySelector('textarea[name="description"]').value;
+            var titleInput = form.querySelector('input[name="title"]');
+            var descriptionInput = document.getElementById('description');
+            var adminDescriptionInput = document.getElementById('adminDescription');
+            var ticketTypeKeyInput = document.getElementById('ticketTypeKey');
+            var categoryHiddenInput = document.getElementById('ticketCategory');
+            var categoryVisibleInput = document.getElementById('categoryInput');
+            var requestTypeInput = document.getElementById('requestType');
+
+            var title = titleInput ? titleInput.value : '';
+            var category = '';
+            if (categoryVisibleInput && categoryVisibleInput.value) {
+                category = categoryVisibleInput.value;
+            } else if (categoryHiddenInput && categoryHiddenInput.value) {
+                category = categoryHiddenInput.value;
+            }
+
+            var isAdminType = ticketTypeKeyInput && (
+                ticketTypeKeyInput.value === 'new-employee' ||
+                ticketTypeKeyInput.value === 'employee-separation' ||
+                ticketTypeKeyInput.value === 'asset-order');
+
+            var description = '';
+            if (isAdminType && adminDescriptionInput) {
+                description = adminDescriptionInput.value;
+            } else if (descriptionInput) {
+                description = descriptionInput.value;
+            }
 
             var formData = new FormData();
 
-            
+            var isDraft = isDraftMode;
+            if (isDraftInput) {
+                isDraftInput.value = isDraft ? 'true' : 'false';
+            }
+
+            // add anti-forgery token to the request
+            if (tokenInput) {
+                formData.append('__RequestVerificationToken', tokenInput.value);
+            }
+
             formData.append('title', title);
             formData.append('category', category);
             formData.append('description', description);
+
+            formData.append('isDraft', isDraft ? 'true' : 'false');
+
+            if (ticketTypeKeyInput) {
+                formData.append('ticketTypeKey', ticketTypeKeyInput.value || 'it-support');
+            }
+
+            // pass request type through so the controller/model binder can set it directly
+            if (requestTypeInput && requestTypeInput.value) {
+                formData.append('requestType', requestTypeInput.value);
+            }
+
+            var isConfidentialCheckbox = document.getElementById('isConfidential');
+            if (isConfidentialCheckbox && isConfidentialCheckbox.checked) {
+                formData.append('isConfidential', 'true');
+            }
+
+            // admin-only fields for operational requests
+            if (isAdminType) {
+                var newEmployeeNameInput = form.querySelector('input[name="newEmployeeName"]');
+                var startDateInput = form.querySelector('input[name="startDate"]');
+                var positionInput = form.querySelector('input[name="position"]');
+                var separationEmployeeNameInput = form.querySelector('input[name="separationEmployeeName"]');
+                var lastWorkingDayInput = form.querySelector('input[name="lastWorkingDay"]');
+                var assetItemNameInput = form.querySelector('input[name="assetItemName"]');
+                var quantityInput = form.querySelector('input[name="quantity"]');
+
+                if (newEmployeeNameInput && newEmployeeNameInput.value) {
+                    formData.append('newEmployeeName', newEmployeeNameInput.value);
+                }
+                if (startDateInput && startDateInput.value) {
+                    formData.append('startDate', startDateInput.value);
+                }
+                if (positionInput && positionInput.value) {
+                    formData.append('position', positionInput.value);
+                }
+                if (separationEmployeeNameInput && separationEmployeeNameInput.value) {
+                    formData.append('separationEmployeeName', separationEmployeeNameInput.value);
+                }
+                if (lastWorkingDayInput && lastWorkingDayInput.value) {
+                    formData.append('lastWorkingDay', lastWorkingDayInput.value);
+                }
+                if (assetItemNameInput && assetItemNameInput.value) {
+                    formData.append('assetItemName', assetItemNameInput.value);
+                }
+                if (quantityInput && quantityInput.value) {
+                    formData.append('quantity', quantityInput.value);
+                }
+            }
 
             // Attach files
             if (filesInput && filesInput.files) {

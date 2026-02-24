@@ -1,59 +1,79 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using Newtonsoft.Json;
 using TicketPlatform.Models;
+using TicketPlatform.Services;
 
 namespace TicketPlatform.Controllers
 {
     public class HomeController : Controller
     {
-        public async Task<ActionResult> Index(int page = 1)
+        private readonly ITicketService _ticketService;
+
+        public HomeController()
+            : this(new TicketService())
+        {
+        }
+
+        public HomeController(ITicketService ticketService)
+        {
+            _ticketService = ticketService;
+        }
+
+        public ActionResult Index()
+        {
+            if (Session["UserId"] == null)
+                return RedirectToAction("Login", "Auth");
+
+            return View();
+        }
+
+        public async Task<ActionResult> MyTickets(int page = 1)
         {
             if (Session["UserId"] == null)
                 return RedirectToAction("Login", "Auth");
 
             var userId = Session["UserId"].ToString();
+			var role = (Session["Role"] ?? "User").ToString();
 
-            var url = $"http://localhost:7071/api/tickets?userId={userId}&page={page}";
-
+            var loadError = false;
             TicketPageResponse apiResult = null;
-            var loadError = false; 
 
-            using (var client = new HttpClient())
+            try
             {
-                try
-                {
-                    var response = await client.GetAsync(url);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var json = await response.Content.ReadAsStringAsync();
-                        apiResult = JsonConvert.DeserializeObject<TicketPageResponse>(json);
-                    }
-                    else
-                    {
-                        loadError = true;
-                    }
-                }
-                catch (Exception)
+				apiResult = await _ticketService.GetTicketsAsync(userId, role, page).ConfigureAwait(false);
+                if (apiResult == null)
                 {
                     loadError = true;
                 }
             }
+            catch (Exception)
+            {
+                loadError = true;
+            }
 
             if (apiResult == null)
             {
-                apiResult = new TicketPageResponse
-                {
-                    page = page,
-                    pageSize = 5,
-                    tickets = new List<Ticket>(),
-                    nextPageToken = null
-                };
-            }
+				apiResult = new TicketPageResponse
+				{
+					page = page,
+					pageSize = 5,
+					tickets = new List<Ticket>(),
+					nextPageToken = null
+				};
+			}
+			else
+			{
+				var tickets = apiResult.tickets ?? new List<Ticket>();
+				apiResult.tickets = tickets.FindAll(t =>
+					(t != null) &&
+					!t.isDraft &&
+					!string.Equals(t.status, "Draft", StringComparison.OrdinalIgnoreCase));
+			}
 
             ViewBag.Page = apiResult.page;
             ViewBag.PageSize = apiResult.pageSize;
@@ -61,65 +81,99 @@ namespace TicketPlatform.Controllers
             ViewBag.HasNextPage = !string.IsNullOrEmpty(apiResult.nextPageToken);
             ViewBag.HasPrevPage = page > 1;
 
-            // Expose error flag so the view can render a friendly message
             ViewBag.TicketsLoadError = loadError;
+			ViewBag.ShowSubmitAction = false;
+			ViewBag.PaginationAction = "MyTickets";
 
-            return View(apiResult.tickets);
+            return View("MyTickets", apiResult.tickets);
         }
 
+		public async Task<ActionResult> DraftTickets(int page = 1)
+		{
+			if (Session["UserId"] == null)
+				return RedirectToAction("Login", "Auth");
+
+			var userId = Session["UserId"].ToString();
+			var role = (Session["Role"] ?? "User").ToString();
+
+			var loadError = false;
+			TicketPageResponse apiResult = null;
+
+			try
+			{
+				apiResult = await _ticketService.GetDraftTicketsAsync(userId, role, page).ConfigureAwait(false);
+				if (apiResult == null)
+				{
+					loadError = true;
+				}
+			}
+			catch (Exception)
+			{
+				loadError = true;
+			}
+
+			if (apiResult == null)
+			{
+				apiResult = new TicketPageResponse
+				{
+					page = page,
+					pageSize = 5,
+					tickets = new List<Ticket>(),
+					nextPageToken = null
+				};
+			}
+			else
+			{
+				var tickets = apiResult.tickets ?? new List<Ticket>();
+				apiResult.tickets = tickets.FindAll(t =>
+					(t != null) &&
+					(
+						t.isDraft ||
+						string.Equals(t.status, "Draft", StringComparison.OrdinalIgnoreCase)
+					));
+			}
+
+			ViewBag.Page = apiResult.page;
+			ViewBag.PageSize = apiResult.pageSize;
+
+			ViewBag.HasNextPage = !string.IsNullOrEmpty(apiResult.nextPageToken);
+			ViewBag.HasPrevPage = page > 1;
+
+			ViewBag.TicketsLoadError = loadError;
+			ViewBag.ShowSubmitAction = true;
+			ViewBag.PaginationAction = "DraftTickets";
+
+			return View("DraftTickets", apiResult.tickets);
+		}
+		
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<ActionResult> CreateTicket(Ticket ticket)
         {
             if (Session["UserId"] == null)
                 return RedirectToAction("Login", "Auth");
 
-            // Get role from session
-            var role = (Session["Role"] ?? "User").ToString();
-
-            string rolePrefix = null;
-
-            switch (role)
-            {
-                case "Sales Rep":
-                    rolePrefix = "W";
-                    break;
-
-                case "SVP":
-                    rolePrefix = "X";
-                    break;
-
-                case "IT Manager":
-                    rolePrefix = "Y";
-                    break;
-
-                default:
-                    rolePrefix = null;
-                    break;
-            }
+			var roleString = (Session["Role"] ?? "User").ToString();
+			roleString = roleString?.Trim();
+			if (string.Equals(roleString, "admin", StringComparison.OrdinalIgnoreCase))
+			{
+				roleString = "Admin";
+			}
+			var rolePrefix = (Session["RolePrefix"] ?? string.Empty).ToString();
+			if (string.IsNullOrWhiteSpace(rolePrefix))
+			{
+				var userRole = RolePrefixHelper.ParseRole(roleString);
+				rolePrefix = RolePrefixHelper.GetPrefix(userRole) ?? string.Empty;
+			}
 
             ticket.userId = Session["UserId"].ToString();
             ticket.employeeCode = (Session["EmployeeCode"] ?? "001").ToString();
-            ticket.role = role;
+            ticket.role = roleString;
             ticket.rolePrefix = rolePrefix;
 
-            var apiUrl = "http://localhost:7071/api/tickets";
-
-            // Build multipart/form-data
-            var formData = new MultipartFormDataContent();
-            formData.Add(new StringContent(ticket.userId ?? string.Empty), "userId");
-            formData.Add(new StringContent(ticket.employeeCode ?? string.Empty), "employeeCode");
-            formData.Add(new StringContent(ticket.role ?? string.Empty), "role");
-            if (!string.IsNullOrEmpty(ticket.rolePrefix))
-            {
-                formData.Add(new StringContent(ticket.rolePrefix), "rolePrefix");
-            }
-            formData.Add(new StringContent(ticket.title ?? string.Empty), "title");
-            formData.Add(new StringContent(ticket.description ?? string.Empty), "description");
-            formData.Add(new StringContent(ticket.category ?? string.Empty), "category");
-
-            // Attach uploaded files
             var files = Request?.Files;
+            var attachments = new List<System.Web.HttpPostedFileBase>();
             if (files != null)
             {
                 var count = Math.Min(files.Count, 5);
@@ -129,26 +183,105 @@ namespace TicketPlatform.Controllers
                     if (file == null || file.ContentLength <= 0)
                         continue;
 
-                    var streamContent = new StreamContent(file.InputStream);
-                    streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType ?? "application/octet-stream");
-                    formData.Add(streamContent, "attachments", file.FileName);
+                    attachments.Add(file);
                 }
             }
 
-            using (var client = new HttpClient())
+            var success = false;
+            try
             {
-                var response = await client.PostAsync(apiUrl, formData);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    TempData["Error"] = "Ticket creation failed!";
-                    return RedirectToAction("Index");
-                }
+                success = await _ticketService.CreateTicketAsync(ticket, attachments).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                success = false;
             }
 
-            TempData["Success"] = "Ticket created successfully!";
-            return RedirectToAction("Index");
+            if (!success)
+            {
+                TempData["Error"] = "Ticket creation failed!";
+                return RedirectToAction("Index");
+            }
+			
+			if (ticket.isDraft)
+			{
+				TempData["Success"] = "Ticket saved as draft.";
+				return RedirectToAction("DraftTickets");
+			}
+			
+			TempData["Success"] = "Ticket created successfully!";
+			return RedirectToAction("Index");
         }
+		
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<ActionResult> SubmitDraftTicket(string ticketId)
+		{
+			if (Session["UserId"] == null)
+				return RedirectToAction("Login", "Auth");
 
+			if (string.IsNullOrWhiteSpace(ticketId))
+			{
+				TempData["Error"] = "Invalid ticket identifier.";
+				return RedirectToAction("DraftTickets");
+			}
+
+			var userId = Session["UserId"].ToString();
+			var success = false;
+			try
+			{
+				success = await _ticketService.SubmitDraftTicketAsync(userId, ticketId).ConfigureAwait(false);
+			}
+			catch (Exception)
+			{
+				success = false;
+			}
+
+			if (!success)
+			{
+				TempData["Error"] = "Submitting draft ticket failed!";
+			}
+			else
+			{
+				TempData["Success"] = "Draft ticket submitted successfully!";
+			}
+
+			return RedirectToAction("DraftTickets");
+		}
+
+		[HttpPost]
+		public async Task<ActionResult> BulkCloseTickets(List<string> ticketIds)
+		{
+			if (Session["UserId"] == null)
+				return new HttpStatusCodeResult(401);
+
+			var role = (Session["Role"] ?? "User").ToString();
+			if (!string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase))
+			{
+				return new HttpStatusCodeResult(403);
+			}
+
+			if (ticketIds == null || ticketIds.Count == 0)
+			{
+				return Json(new { success = false, message = "No tickets selected." });
+			}
+
+			var success = false;
+			try
+			{
+				success = await _ticketService.BulkCloseTicketsAsync(ticketIds, role).ConfigureAwait(false);
+			}
+			catch (Exception)
+			{
+				success = false;
+			}
+
+			if (!success)
+			{
+				return Json(new { success = false, message = "Failed to close selected tickets." });
+			}
+
+			return Json(new { success = true, message = "Selected tickets closed successfully." });
+		}
     }
 }
