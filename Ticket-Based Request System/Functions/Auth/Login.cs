@@ -54,7 +54,10 @@ namespace Ticket_Based_Request_System.Functions.Auth
                     userId = user.id,
                     user.employeeCode,
                     user.role,
-                    user.rolePrefix
+                    user.rolePrefix,
+                    user.name,
+                    user.email,
+                    user.profileImageUrl
                 });
 
                 return res;
