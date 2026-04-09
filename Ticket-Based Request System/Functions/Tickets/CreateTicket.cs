@@ -48,7 +48,7 @@ namespace Ticket_Based_Request_System.Functions.Tickets
                 bool isConfidential = false;
 
                 var attachments = new List<Attachment>();
-                var pendingFiles = new List<(MultipartSection section, string fileName)>();
+                var pendingFiles = new List<(MemoryStream data, string fileName, string contentType)>();
 
                 MultipartSection section;
                 while ((section = await reader.ReadNextSectionAsync()) != null)
@@ -79,7 +79,10 @@ namespace Ticket_Based_Request_System.Functions.Tickets
                     }
                     else if (contentDisposition.IsFileDisposition())
                     {
-                        pendingFiles.Add((section, contentDisposition.FileName.Value));
+                        var ms = new MemoryStream();
+                        await section.Body.CopyToAsync(ms);
+                        ms.Position = 0;
+                        pendingFiles.Add((ms, contentDisposition.FileName.Value, section.ContentType));
                     }
                 }
 
@@ -94,19 +97,19 @@ namespace Ticket_Based_Request_System.Functions.Tickets
                 }
 
                 // Handle attachments
-                foreach (var (fileSection, fileName) in pendingFiles)
+                foreach (var (fileData, fileName, contentType) in pendingFiles)
                 {
                     var ext = Path.GetExtension(fileName).ToLower();
                     if (ext != ".jpg" && ext != ".jpeg" && ext != ".pdf")
                         return BadRequest(req, "Only JPG, JPEG, PDF allowed");
 
                     string blobPath = $"tickets/{userId}/{Guid.NewGuid()}_{fileName}";
-                    string fileUrl = await _blob.UploadAsync(blobPath, fileSection.Body, fileSection.ContentType);
+                    string fileUrl = await _blob.UploadAsync(blobPath, fileData, contentType);
 
                     attachments.Add(new Attachment
                     {
                         fileName = fileName,
-                        fileType = fileSection.ContentType,
+                        fileType = contentType,
                         fileUrl = fileUrl,
                         uploadedAt = DateTime.UtcNow
                     });
